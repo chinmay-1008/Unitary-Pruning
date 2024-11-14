@@ -138,8 +138,9 @@ function bfs_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket
 
     for (oi,coeff) in o_transformed.ops
         expval += coeff*expectation_value(oi, ket)
-        coeff_norm2+= abs(coeff)^2
+        coeff_norm2+= abs(coeff)^2      # final list of operators
     end
+    coeff_norm2 = sqrt(coeff_norm2)
     # println(coeff_norm2)
     # println("dfhvskjdvjksdfsdjkfsjhfkshfleshfkehfkl")
 
