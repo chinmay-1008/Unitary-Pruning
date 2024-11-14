@@ -109,6 +109,7 @@ function bfs_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket
         g = generators[t]
 
         sin_branch = PauliSum(N)
+        temp_norm2 = 0
 
         for (oi,coeff) in o_transformed.ops
            
@@ -125,17 +126,24 @@ function bfs_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket
                 sum!(sin_branch, oj * vsin[t] * coeff * 1im)
 
             end
+            temp_norm2+=abs(coeff)^2
         end
         sum!(o_transformed, sin_branch) 
         clip!(o_transformed, thresh=thresh)
         n_ops[t] = length(o_transformed)
+        # println(temp_norm2)
     end
+
+    coeff_norm2 = 0
 
     for (oi,coeff) in o_transformed.ops
         expval += coeff*expectation_value(oi, ket)
+        coeff_norm2+= abs(coeff)^2
     end
-   
-    return expval, n_ops
+    # println(coeff_norm2)
+    # println("dfhvskjdvjksdfsdjkfsjhfkshfleshfkehfkl")
+
+    return expval, n_ops, coeff_norm2
 end
 
 
