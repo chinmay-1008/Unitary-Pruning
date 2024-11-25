@@ -84,3 +84,48 @@ function build_time_evolution_matrix(generators::Vector{Pauli{N}}, angles::Vecto
 
     return U 
 end
+
+function heisenberg(o::Pauli{N}; Jx, Jy, Jz, k) where N 
+    generators = Vector{Pauli{N}}([])
+    parameters = Vector{Float64}([])
+    # Loop over sites
+    for ki in 1:k 
+        for i in 1:N-1
+            push!(generators, Pauli(N, X=[i, i + 1]))
+            push!(parameters, Jx)
+            push!(generators, Pauli(N, Y=[i, i + 1]))
+            push!(parameters, Jy)
+            push!(generators, Pauli(N, Z=[i, i + 1]))
+            push!(parameters, Jz)
+        end
+    end
+
+    return generators, parameters
+end
+
+
+function local_folding(generators::Vector{Pauli{N}}, parameters, scaling_factor) where N
+    # Adding U'U at rondom places in the generators
+
+    places = rand(1:(length(generators)-1), scaling_factor)
+    places = sort(places, rev = true)
+
+    temp_gens = deepcopy(generators)
+    temp_angles = deepcopy(parameters)
+
+    for j in places
+        add_pauli = temp_gens[j]
+        add_angle = temp_angles[j]
+        # temp_gens = vcat(temp_gens[1:j-1], add_pauli, add_pauli, temp_gens[j:end])
+        # temp_angles = vcat(temp_angles[1:j-1], add_angle, -add_angle, temp_angles[j:end])
+
+        insert!(temp_gens, j+1, -add_pauli)
+        insert!(temp_gens, j+2, add_pauli)
+
+        insert!(temp_angles, j+1, add_angle)
+        insert!(temp_angles, j+2, add_angle)
+      
+
+    end
+    return temp_gens, temp_angles
+end
