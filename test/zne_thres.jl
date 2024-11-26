@@ -54,7 +54,7 @@ function run_zne()
     return
 end
 
-function local_folding(generators::Vector{Pauli{N}}, angles, scaling_factor) where {N}
+function local_folding(generators::Vector{Pauli{N}}, angles, scaling_factor) where N
     # Adding U'U at rondom places in the generators
 
     places = rand(1:(length(generators)-1), scaling_factor)
