@@ -17,7 +17,7 @@ function run(; N=10, k=5, thresh=1e-3)
 
     angles = [] 
     e = [] 
-    
+ 
     i = 4
     α = i * π / 32 
     generators, parameters = UnitaryPruning.heisenberg(o, Jx = α, Jy = α,Jz = α, k=k)
