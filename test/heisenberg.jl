@@ -93,17 +93,17 @@ function run_threshold()
     end
 
     println(ener)
-    scatter(thresholds, ener, smooth=true)
-    xlabel!("Threshold")
-    ylabel!("Expectation Value")
-    title!("E{Z_1} vs threshold (N=10; k=10; α=4π/32)")
-    savefig("test/ener_vs_thre_hei.pdf")
+    # scatter(thresholds, ener, smooth=true)
+    # xlabel!("Threshold")
+    # ylabel!("Expectation Value")
+    # title!("E{Z_1} vs threshold (N=10; k=10; α=4π/32)")
+    # savefig("test/ener_vs_thre_hei.pdf")
     return
 end
 
 
-# run(N = 10, k = 1, thresh = 1e-3)
+run(N = 50, k = 10, thresh = 1e-3)
 
-run_local_folding()
+# run_local_folding()
 
 # run_threshold()
