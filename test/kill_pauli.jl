@@ -3,6 +3,7 @@ using Random, Distributions
 using PauliOperators
 using Printf
 using Plots
+using DelimitedFiles
 
 
 function bfs_new(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket , thresh , sigma) where {N}
@@ -50,6 +51,7 @@ function bfs_new(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket , thr
         sum!(o_transformed, sin_branch)
         clip!(o_transformed, thresh=thresh)
 
+        # killing random paulis based on the coefficients 
         for (oi, coeff) in o_transformed.ops
             rn = abs(rand(Normal(0, sigma)))
 
@@ -58,7 +60,6 @@ function bfs_new(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket , thr
 
             end
         end
-
 
         n_ops[t] = length(o_transformed)
     end
@@ -92,7 +93,7 @@ function run(; N=10, k=5, thresh=1e-3, sigma = 1e-3)
     # push!(e, ei)
     # push!(angles, α)
     # @printf(" α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.5f\n", α, real(ei), imag(ei), maximum(nops), c_norm2, thresh)
-    @printf(" α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei_n), imag(ei_n), maximum(nops_n), c_norm2_n, thresh)
+    # @printf(" α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei_n), imag(ei_n), maximum(nops_n), c_norm2_n, thresh)
 
     # U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
     # o_mat = Matrix(o)
@@ -111,12 +112,28 @@ function run_temp()
     end
 
     println(energy)
-    scatter(stds, energy, smooth=true)
-    xlabel!("σ")
-    ylabel!("Expectation Value")
-    title!("E{Z_1} vs σ (N=10; k=10; α=4π/32)")
-    savefig("test/ener_vs_sigma_hei.pdf")
-
+    # scatter(stds, energy, smooth=true)
+    # xlabel!("σ")
+    # ylabel!("Expectation Value")
+    # title!("E{Z_1} vs σ (N=10; k=10; α=4π/32)")
+    # savefig("test/ener_vs_sigma_hei.pdf")
+    return energy
 end
 
-run_temp()
+function run_samples()
+
+    energies = []
+    for time in 1:100
+        temp_energies = run_temp()
+
+        println("Sample: ", time, ", completed")
+        push!(energies, temp_energies)
+    end
+
+    writedlm("test/sampled_energies.dat", energies)
+
+    return
+end
+
+
+run_samples()
