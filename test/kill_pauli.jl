@@ -10,8 +10,8 @@ function run(; N=10, k=5,sigma = 1e-3, layer = false)
     ket = KetBitString(N, 0) 
     o = Pauli(N, Z=[1])
 
-    angles = [] 
-    e = [] 
+    # angles = [] 
+    # e = [] 
     
     i = 4
     α = i * π / 32 
@@ -35,7 +35,7 @@ function run_temp()
     energy = []
     for sigma in stds
 
-        ei = run(N = 50, k = 10, sigma=sigma, layer = false)
+        ei = run(N = 127, k = 10, sigma=sigma, layer = true)
         push!(energy, ei)
 
     end
@@ -59,11 +59,11 @@ function run_samples()
         push!(energies, temp_energies)
     end
 
-    writedlm("test/sam_ev_layer_f_N50_.dat", energies)
+    writedlm("test/sam100_ev_layer_t_N127.dat", energies)
 
     return
 end
 
 
 run_samples()
-# run(N = 5, k = 1, sigma = 1e-3, layer = true)
+# run(N = 127, k = 10, sigma = 1e-3, layer = true)
