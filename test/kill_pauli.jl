@@ -16,10 +16,11 @@ function run(; N=10, k=5,sigma = 1e-3, layer = false)
     i = 4
     α = i * π / 32 
     generators, parameters = UnitaryPruning.heisenberg(o, Jx = α, Jy = α,Jz = α, k=k)
-    ei_n , nops_n, c_norm2_n = UnitaryPruning.stochastic_bfs(generators, parameters, PauliSum(o), ket, sigma = sigma, layer = layer)
+    # ei_n , nops_n, c_norm2_n = UnitaryPruning.stochastic_bfs(generators, parameters, PauliSum(o), ket, sigma = sigma, layer = layer)
+    ei_n , nops_n, c_norm2_n = UnitaryPruning.flat_prob_kill_bfs(generators, parameters, PauliSum(o), ket, threshold = sigma)
     
 
-    # @printf("α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f sigma: %3.10f\n", α, real(ei_n), imag(ei_n), maximum(nops_n), c_norm2_n, sigma)
+    @printf("α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f sigma: %3.10f\n", α, real(ei_n), imag(ei_n), maximum(nops_n), c_norm2_n, sigma)
 
     # U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
     # o_mat = Matrix(o)
@@ -31,11 +32,11 @@ end
 
 
 function run_temp()
-    stds = [i*1e-3 for i in 1:20]
+    stds = [i*1e-4 for i in 1:20]
     energy = []
     for sigma in stds
 
-        ei = run(N = 127, k = 10, sigma=sigma, layer = true)
+        ei = run(N = 10, k = 10, sigma=sigma, layer = true)
         push!(energy, ei)
 
     end
@@ -52,18 +53,18 @@ end
 function run_samples()
 
     energies = []
-    for time in 1:100
+    for time in 1:1000
         temp_energies = run_temp()
 
         println("Sample: ", time, ", completed")
         push!(energies, temp_energies)
     end
 
-    writedlm("test/sam100_ev_layer_t_N127.dat", energies)
+    writedlm("test/sam1000_ev_t_N10_tight.dat", energies)
 
     return
 end
 
 
-run_samples()
-# run(N = 127, k = 10, sigma = 1e-3, layer = true)
+# @time run_samples()
+run(N = 10, k = 10, sigma = 0.01, layer = true)

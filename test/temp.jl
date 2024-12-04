@@ -1,0 +1,3 @@
+using Random
+
+println(rand())
