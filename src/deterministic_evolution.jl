@@ -221,6 +221,7 @@ function stochastic_bfs(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ke
 end
 
 
+# doesn't work as intended
 function flat_prob_kill_bfs(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket; threshold=1e-3) where {N}
 
     #
@@ -287,3 +288,163 @@ function flat_prob_kill_bfs(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}
     return expval, n_ops, coeff_norm2
 end
 
+
+function stochastic_bfs_flat(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket; sigma=1e-3, layer::Bool = false) where {N}
+
+    #
+    # for a single pauli Unitary, U = exp(-i θn Pn/2)
+    # U' O U = cos(θ) O + i sin(θ) OP
+    nt = length(angles)
+    length(angles) == nt || throw(DimensionMismatch)
+    vcos = cos.(angles)
+    vsin = sin.(angles)
+
+    # collect our results here...
+    expval = zero(ComplexF64)
+
+
+    o_transformed = deepcopy(o)
+    sin_branch = PauliSum(N)
+ 
+    n_ops = zeros(Int,nt)
+    
+    for t in 1:nt
+
+        g = generators[t]
+
+        sin_branch = PauliSum(N)
+
+        for (oi,coeff) in o_transformed.ops
+        
+
+            if commute(oi, g.pauli) == false
+                
+                # cos branch
+                o_transformed[oi] = coeff * vcos[t]
+
+                # sin branch
+                oj = g * oi    # multiply the pauli's
+                sum!(sin_branch, oj * vsin[t] * coeff * 1im)
+  
+            end
+        end
+
+        sum!(o_transformed, sin_branch)
+
+        if layer
+            # similar to threshold but based on a distribution
+            rn = abs(rand(Uniform(0, sigma)))
+            clip!(o_transformed, thresh=rn)
+        else
+    
+            # killing random paulis based on the coefficients 
+            for (oi, coeff) in o_transformed.ops
+                rn = abs(rand(Uniform(0, sigma)))
+
+                if abs(coeff) < rn
+
+                    delete!(o_transformed.ops, oi)
+
+                end
+            end
+        end
+        n_ops[t] = length(o_transformed)
+    end
+
+    coeff_norm2 = 0
+
+    for (oi,coeff) in o_transformed.ops
+        expval += coeff*expectation_value(oi, ket)
+        coeff_norm2+= abs(coeff)^2      # final list of operators
+    end
+    coeff_norm2 = sqrt(coeff_norm2)
+
+    return expval, n_ops, coeff_norm2
+end
+
+
+function stochastic_bfs_renormalized(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket; sigma=1e-3, layer::Bool = false) where {N}
+
+    #
+    # for a single pauli Unitary, U = exp(-i θn Pn/2)
+    # U' O U = cos(θ) O + i sin(θ) OP
+    nt = length(angles)
+    length(angles) == nt || throw(DimensionMismatch)
+    vcos = cos.(angles)
+    vsin = sin.(angles)
+
+    # collect our results here...
+    expval = zero(ComplexF64)
+
+
+    o_transformed = deepcopy(o)
+    sin_branch = PauliSum(N)
+ 
+    n_ops = zeros(Int,nt)
+    
+    for t in 1:nt
+
+        g = generators[t]
+
+        sin_branch = PauliSum(N)
+
+        for (oi,coeff) in o_transformed.ops
+        
+
+            if commute(oi, g.pauli) == false
+                
+                # cos branch
+                o_transformed[oi] = coeff * vcos[t]
+
+                # sin branch
+                oj = g * oi    # multiply the pauli's
+                sum!(sin_branch, oj * vsin[t] * coeff * 1im)
+  
+            end
+        end
+
+        sum!(o_transformed, sin_branch)
+        temp_coeff_norm2 = 0
+
+        if layer
+            # similar to threshold but based on a distribution
+            rn = abs(rand(Uniform(0, sigma)))
+            clip!(o_transformed, thresh=rn)
+        else
+    
+            # killing random paulis based on the coefficients 
+            for (oi, coeff) in o_transformed.ops
+                rn = abs(rand(Uniform(0, sigma)))
+
+                if abs(coeff) < rn
+
+                    delete!(o_transformed.ops, oi)
+
+                else
+
+                    temp_coeff_norm2+= abs(coeff)^2   
+
+                end
+            end
+        end
+        temp_coeff_norm2 = sqrt(temp_coeff_norm2)
+
+        for (oi, coeff) in o_transformed.ops
+            o_transformed[oi] = coeff/temp_coeff_norm2
+        
+        end
+    
+        n_ops[t] = length(o_transformed)
+
+    end
+
+    coeff_norm2 = 0
+
+    for (oi,coeff) in o_transformed.ops
+        expval += coeff*expectation_value(oi, ket)
+        coeff_norm2+= abs(coeff)^2      # final list of operators
+    end
+    coeff_norm2 = sqrt(coeff_norm2)
+
+    return expval, n_ops, coeff_norm2
+end

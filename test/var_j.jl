@@ -12,16 +12,17 @@ function run(; N=10, k=5,sigma = 1e-3, layer = false)
 
     angles = [] 
     e = []
-    e_mat = [] 
-    n = 30
-    for i in 1:2*n
+    e_mat = []
+    n_ops = [] 
+    n = 10
+    for i in 0:2*n
         # i = 4
         α = i / n 
         generators, parameters = UnitaryPruning.heisenberg(o, Jx = α, Jy = 1.0,Jz = 1.0, k=k)
         # ei_n , nops_n, c_norm2_n = UnitaryPruning.stochastic_bfs(generators, parameters, PauliSum(o), ket, sigma = sigma, layer = layer)
         ei_n , nops_n, c_norm2_n = UnitaryPruning.bfs_evolution(generators, parameters, PauliSum(o), ket, thresh = sigma)
         
-
+        
         @printf("α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f sigma: %3.10f\n", α, real(ei_n), imag(ei_n), maximum(nops_n), c_norm2_n, sigma)
 
         # U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
@@ -30,6 +31,7 @@ function run(; N=10, k=5,sigma = 1e-3, layer = false)
         # println(real(m[1]), " ", real(ei_n), " Error: ",real(m[1]) -  real(ei_n))
         push!(angles, α)
         push!(e, real(ei_n))
+        push!(n_ops, maximum(nops_n))
         # push!(e_mat, real(m[1]))
     end
  
@@ -38,17 +40,19 @@ function run(; N=10, k=5,sigma = 1e-3, layer = false)
     # println(e)
     # println()
     # println(e_mat)
-    scatter(angles, e)
+    # scatter(angles, e)
     # scatter(angles, [e_mat, e], label = ["Exact" "BFS"])
     # p2 = scatter(angles, e, label = "BFS")
 
     # # plot(p1, p2, layout=(1, 2))
-    xlabel!("J_x")
-    ylabel!("Expectation Value")
-    title!("E{Z_1} vs J_x (N=8; k=10; J_y = 1.0; J_z = 1.0)")
-    savefig("test/ener_vs_Jx_8_f_det.pdf")
-    println(e)
-    return e
+    # xlabel!("J_x")
+    # ylabel!("Expectation Value")
+    # title!("E{Z_1} vs J_x (N=8; k=10; J_y = 1.0; J_z = 1.0)")
+    # savefig("test/ener_vs_Jx_8_f_det.pdf")
+    # println(e)
+    println(n_ops)
+    # return e
+    return n_ops
 end
 
 
@@ -72,6 +76,7 @@ function run_exact(; N=10, k=5,sigma = 1e-3, layer = false)
     return [e_mat, angles]
 end
 
+
 function run_samples()
     println("Exact Calculating")
     exact = run_exact(N = 8, k = 10, sigma = 1e-3, layer = false)
@@ -79,7 +84,7 @@ function run_samples()
     println("Exact data calculated")
 
     energies = []
-    for time in 1:1000
+    for time in 1:100
         temp_energies = run(N = 8, k = 10, sigma = 1e-3, layer = false)
 
         println("Sample: ", time, ", completed")
@@ -91,5 +96,19 @@ function run_samples()
     return
 end
 
-@time run(N = 8, k = 10, sigma = 1e-2, layer = false)
+
+function run_nops()
+    ops = []
+
+    for n in 1:100
+        temp_nops = run(N = 8, k = 10, sigma = 1e-3, layer = false)
+        println("Samples: ", n, " completed")
+        push!(ops, temp_nops)
+    end
+
+    writedlm("test/sam100_ev_nops_N8.dat", ops)
+end
+
+@time run(N = 8, k = 10, sigma = 1e-3, layer = false)
 # @time run_samples()
+# @time run_nops()

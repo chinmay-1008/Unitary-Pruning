@@ -1,3 +1,5 @@
 using Random
+using Distributions
 
-println(rand())
+
+println(rand(Uniform(0, 1e-3)))
