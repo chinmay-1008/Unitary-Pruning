@@ -14,6 +14,6 @@ include("deterministic_evolution.jl")
 include("eagle.jl")
 include("unitary_sequence.jl")
 include("energy_dfs.jl")
-
+include("mitigation.jl")
 
 end # module

@@ -448,3 +448,6 @@ function stochastic_bfs_renormalized(generators::Vector{Pauli{N}}, angles, o::Pa
 
     return expval, n_ops, coeff_norm2
 end
+
+
+
