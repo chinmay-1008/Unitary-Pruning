@@ -42,38 +42,48 @@ function bfs_subspace_expansion(generators::Vector{Pauli{N}}, angles, o::PauliSu
         clip!(o_transformed, thresh=thresh)
         n_ops[t] = length(o_transformed)
     end
-    temp_norm = 0
-    for (oi, coeff) in o_transformed.ops
-        temp_norm += abs(coeff)^2
+    
+    for (oi,coeff) in o_transformed.ops
+        expval += coeff*expectation_value(oi, ket)
     end
-    temp_norm = sqrt(temp_norm)
 
-#adding a subspace evolution
+    expval_bfs = expval
+    # display(o_transformed)
+    # @printf(" Expectation value for BFS: %12.8f\n", expval)
+
+    expval = 0
+    # println(n_ops[end])
+
+    # Now go back to t=0
+    for (oi,coeff) in o_transformed.ops
+        o_transformed[oi] = 0
+    end
+   
+    sum!(o_transformed, o)
+    
+    #
+    #adding a subspace evolution
     for t in 1:nt
         g = generators[t]
 
+        next_layer = PauliSum(N)
         for (oi,coeff) in o_transformed.ops
-            coeff = coeff/temp_norm
-            if commute(oi, g.pauli)
-                continue
-            else
+            if commute(oi, g.pauli) == false
                 temp = g * oi
-                o_transformed[oi] = (o_transformed[oi]/temp_norm) + coeff * vcos[t]
-                # println(o_transformed[oi])
-                if haskey(o_transformed.ops, temp.pauli)    
-                    o_transformed[temp.pauli] = (get(o_transformed, temp.pauli)/temp_norm) +  1im*vsin[t]*coeff*get_phase(temp)*2
-                    println(o_transformed[temp.pauli])
-                # else
-                    # println("sin")
-                    # o_transformed[temp] = 1im * vsin[t] * coeff
-
+                o_transformed[oi] = coeff * vcos[t]
+                if haskey(o_transformed.ops, temp.pauli)
+                    # o_transformed[temp.pauli] = get(o_transformed, temp.pauli) +  1im*vsin[t]*coeff*get_phase(temp)
+                    sum!(next_layer, temp * vsin[t] * coeff * 1im)
                 end
             end
         end
+        sum!(o_transformed, next_layer)
 
         n_ops[t] = length(o_transformed)
     end
+    # println(n_ops[end])
 
+    # display(o_transformed)
     coeff_norm2 = 0
 
     for (oi,coeff) in o_transformed.ops
@@ -83,7 +93,7 @@ function bfs_subspace_expansion(generators::Vector{Pauli{N}}, angles, o::PauliSu
     coeff_norm2 = sqrt(coeff_norm2)
 
 
-    return expval, n_ops, coeff_norm2
+    return expval, expval_bfs, n_ops, coeff_norm2
 
 
 end

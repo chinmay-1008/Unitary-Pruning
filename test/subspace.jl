@@ -20,12 +20,12 @@ function run(; N=10, k=5,thresh = 1e-3)
     # ei_n , nops_n, c_norm2_n = UnitaryPruning.flat_prob_kill_bfs(generators, parameters, PauliSum(o), ket, threshold = sigma)
     # ei_n , nops_n, c_norm2_n = UnitaryPruning.stochastic_bfs_flat(generators, parameters, PauliSum(o), ket, sigma = sigma, layer = layer)
     # ei_n , nops_n, c_norm2_n = UnitaryPruning.stochastic_bfs_renormalized(generators, parameters, PauliSum(o), ket, sigma = sigma, layer = layer)
-    ei_n , nops_n, c_norm2_n = UnitaryPruning.bfs_subspace_expansion(generators, parameters, PauliSum(o), ket, thresh = thresh)
+    ei_n , ei_bfs, nops_n, c_norm2_n = UnitaryPruning.bfs_subspace_expansion(generators, parameters, PauliSum(o), ket, thresh = thresh)
     # ei_n , nops_n, c_norm2_n = UnitaryPruning.bfs_evolution(generators, parameters, PauliSum(o), ket, thresh = thresh)
 
 
 
-    @printf("α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei_n), imag(ei_n), maximum(nops_n), c_norm2_n, thresh)
+    @printf("α: %6.4f e: %12.8f+%12.8fi e_bfs %12.8f: nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei_n), imag(ei_n), real(ei_bfs), maximum(nops_n), c_norm2_n, thresh)
 
     # U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
     # o_mat = Matrix(o)
@@ -35,5 +35,7 @@ function run(; N=10, k=5,thresh = 1e-3)
     return real(ei_n)
 end
 
-@time run(N = 3, k = 10, thresh = 1e-3)
+for i in 1:10
+    run(N = 10, k = 10, thresh = i*1e-4)
+end
 
