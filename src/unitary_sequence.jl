@@ -104,6 +104,21 @@ function heisenberg(o::Pauli{N}; Jx, Jy, Jz, k) where N
 end
 
 
+function tilted_ising(N, Jx, Jz)
+    H = PauliSum(N)
+    hj = []
+    for i in 1:N
+        temp = PauliSum(N)
+
+        temp += Jx * Pauli(N, X=[i])
+        temp += Jz * Pauli(N, Z=[i])
+        temp += 0.5 * (Pauli(N, Z=[(i-1+N-1)%N + 1, i]) + Pauli(N, Z=[i, (i%N) + 1]))
+        H += temp
+        push!(hj, temp)
+    end 
+    return H, hj
+end 
+
 function local_folding(generators::Vector{Pauli{N}}, parameters, scaling_factor) where N
     # Adding U'U at rondom places in the generators
 

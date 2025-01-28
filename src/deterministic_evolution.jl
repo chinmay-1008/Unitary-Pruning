@@ -783,6 +783,16 @@ function bfs_angle_error(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, k
     return expval, n_ops, coeff_norm2
 end
 
+function weight(ps::FixedPhasePauli{N}) where {N}
+    x = ps.x
+    z = ps.z
+    return count_ones(x | z)
+end
+
+function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0) where {N}
+    filter!(p->(abs(p.second) > thresh) | (weight(p.first) < lc), ps.ops)
+end
+
 
 function bfs_evolution_diff(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, γ = 0, lc = 0) where {N}
 
@@ -793,7 +803,7 @@ function bfs_evolution_diff(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}
     length(angles) == nt || throw(DimensionMismatch)
     vcos = cos.(angles)
     vsin = sin.(angles)
-
+    # a = rand(3)*5
     # collect our results here...
     expval = zero(ComplexF64)
 
@@ -830,19 +840,21 @@ function bfs_evolution_diff(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}
         sum!(o_transformed, sin_branch)
         
         for (oi, coeff) in o_transformed.ops
-            x = oi.x
-            z = oi.z
-            ls = count_ones(x | z)
+            # x = oi.x
+            # z = oi.z
+            # ls = count_ones(x | z)
+            ls = weight(oi)
             if ls > lc
-                coeff *= exp(-γ * (ls - lc))
-                if abs(coeff) < thresh
-                    delete!(o_transformed.ops, oi)
-                else
-                    o_transformed[oi] = coeff
-                end
+                # coeff *= exp(-γ * (ls - lc))
+                # if abs(coeff) < thresh
+                #     delete!(o_transformed.ops, oi)
+                # else
+                o_transformed[oi] = coeff * exp(-γ * (ls - lc))
+                # end
             end
         end
         # clip!(o_transformed, thresh=thresh)
+        myclip!(o_transformed, thresh = thresh, lc=lc)
         n_ops[t] = length(o_transformed)
     end
 
@@ -858,3 +870,81 @@ function bfs_evolution_diff(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}
 
     return expval, n_ops, coeff_norm2
 end
+
+
+function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, k = 10, γ = 0, lc = 0) where {N}
+
+    #
+    # for a single pauli Unitary, U = exp(-i θn Pn/2)
+    # U' O U = cos(θ) O + i sin(θ) OP
+    nt = length(angles)
+    length(angles) == nt || throw(DimensionMismatch)
+    vcos = cos.(angles)
+    vsin = sin.(angles)
+    # collect our results here...
+    expval = zero(ComplexF64)
+
+
+    o_transformed = deepcopy(o)
+    sin_branch = PauliSum(N)
+ 
+    n_ops = zeros(Int,nt)
+    
+    for t in 1:nt
+
+        g = generators[t]
+
+        sin_branch = PauliSum(N)
+        temp_norm2 = 0
+
+        for (oi,coeff) in o_transformed.ops
+           
+            abs(coeff) > thresh || continue
+
+
+            if commute(oi, g.pauli) == false
+                
+                # cos branch
+                o_transformed[oi] = coeff * vcos[t]
+
+                # sin branch
+                oj = g * oi    # multiply the pauli's
+                sum!(sin_branch, oj * vsin[t] * coeff * 1im)
+  
+            end
+            temp_norm2+=abs(coeff)^2
+        end
+        sum!(o_transformed, sin_branch)
+        
+        for (oi, coeff) in o_transformed.ops
+            # x = oi.x
+            # z = oi.z
+            # ls = count_ones(x | z)
+            ls = weight(oi)
+            if ls > lc
+                # coeff *= exp(-γ * (ls - lc))
+                # if abs(coeff) < thresh
+                #     delete!(o_transformed.ops, oi)
+                # else
+                o_transformed[oi] = coeff * exp(-γ * (ls - lc))
+                # end
+            end
+        end
+        # clip!(o_transformed, thresh=thresh)
+        myclip!(o_transformed, thresh = thresh, lc=lc)
+        n_ops[t] = length(o_transformed)
+    end
+
+    coeff_norm2 = 0
+
+    for (oi,coeff) in o_transformed.ops
+        expval += coeff*expectation_value(oi, ket)
+        coeff_norm2+= abs(coeff)^2      # final list of operators
+    end
+    coeff_norm2 = sqrt(coeff_norm2)
+    # println(coeff_norm2)
+    # println("dfhvskjdvjksdfsdjkfsjhfkshfleshfkehfkl")
+
+    return expval, n_ops, coeff_norm2
+end
+

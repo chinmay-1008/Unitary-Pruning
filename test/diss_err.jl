@@ -9,17 +9,14 @@ function run(; N=10, k=5,threshold = 1e-3, gamma = 0.5, lc = 1)
    
     ket = KetBitString(N, 0) 
     o = Pauli(N, Z=[1])
+    # o = Pauli(N, X=[2], Y=[1], Z = [3])
 
-    # angles = [] 
-    # e = [] 
-    
     i = 4
     α = i * π / 32 
-    generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.7, k=k)
+    generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # ei_n , nops_n, c_norm2_n = UnitaryPruning.stochastic_bfs(generators, parameters, PauliSum(o), ket, sigma = sigma, layer = layer)
     # ei_n , nops_n, c_norm2_n = UnitaryPruning.bfs_coeff_error(generators, parameters, PauliSum(o), ket, thresh = threshold, epsilon = epsilon)
     ei_n , nops_n, c_norm2_n = UnitaryPruning.bfs_evolution_diff(generators, parameters, PauliSum(o), ket, thresh = threshold, γ = gamma, lc = lc )
-
     # ei_n , nops_n, c_norm2_n = UnitaryPruning.bfs_angle_error(generators, parameters, PauliSum(o), ket, thresh = sigma, epsilon = epsilon)
  
 
@@ -35,7 +32,9 @@ end
 
 
 function run_temp()
-    th = [-1.0, 1.0e-5, 5.0e-5, 1.0e-4, 5.0e-4, 1.0e-3, 5.0e-3]
+    # th = [-1.0, 1.0e-5, 5.0e-5, 1.0e-4, 5.0e-4, 1.0e-3, 5.0e-3]
+    th = [5.0e-4,1.0e-3, 5.0e-3]
+    # th = 
     for lc in [3]
         for thre in th
             println("l*: ", lc, "  Threshold: ", thre )
@@ -46,7 +45,7 @@ function run_temp()
             energy = []
             for ga in eps
 
-                ei = run(N = 8, k = 10, threshold=thre, gamma = ga, lc = lc)
+                ei = run(N = 128, k = 10, threshold=thre, gamma = ga, lc = lc)
                 push!(energy, ei)
 
             end
@@ -57,7 +56,7 @@ function run_temp()
             # ylabel!("Expectation Value")
             # title!("(N=8; k=10; α=4π/32; thresh = 5e-3, l* = 3)")
             # savefig("test/ener_vs_gamma_N8_5e-3_3_new.pdf")
-            writedlm("test/diss_data/diff_j/exp_gam_N8_diff_$thre-$lc.dat", energy)
+            writedlm("test/diss_data/new_clip/exp_gam_N128_clip_$thre-$lc.dat", energy)
         end
     end
     return
@@ -83,5 +82,7 @@ end
 
 
 # @time run_samples()
-run_temp()
-# run(N = 8, k = 10, threshold = 100, gamma = 0, lc = 0)
+# run_temp()
+run(N = 50, k = 10, threshold = 0.0002, gamma =0, lc = 0)
+# println(UnitaryPruning.weight(FixedPhasePauli("XXYYYYYII")))
+# 
