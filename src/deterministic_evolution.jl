@@ -1,5 +1,6 @@
 using Random, Distributions
 using BenchmarkTools
+using LinearAlgebra
 """
     deterministic_pauli_rotations(generators::Vector{P}, angles, o::P, ket; nsamples=1000) where {N, P<:Pauli}
 
@@ -871,80 +872,181 @@ function bfs_evolution_diff(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}
     return expval, n_ops, coeff_norm2
 end
 
+function dissipation(o::PauliSum{N}; γ = 0.1, lc = 0) where N
+    o_transformed_d = deepcopy(o)
+    # temp_coeff = Float64(0)
+    for (oi_d, coeff_d) in o_transformed_d.ops
+        ls = weight(oi_d)
+        if ls >= lc
+            # temp_coeff = coeff_d * exp(-γ*(ls - lc))
+            o_transformed_d[oi_d] = coeff_d * exp(-γ*(ls - lc))
+            # println(exp(-γ*(ls - lc)))
+            # println("Transform: ", coeff_d, " to: ", coeff_d * exp(-γ*(ls - lc)))
+        end
+    end 
 
-function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, k = 10, γ = 0, lc = 0) where {N}
+    return o_transformed_d
+end
+
+
+function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k; thresh=1e-3,γ = 0, lc = 0) where {N}
 
     #
     # for a single pauli Unitary, U = exp(-i θn Pn/2)
     # U' O U = cos(θ) O + i sin(θ) OP
     nt = length(angles)
     length(angles) == nt || throw(DimensionMismatch)
-    vcos = cos.(angles)
-    vsin = sin.(angles)
-    # collect our results here...
-    expval = zero(ComplexF64)
-
-
-    o_transformed = deepcopy(o)
+    vcos = cos.(2.0*angles)
+    vsin = sin.(2.0*angles)
+ 
+    initial_state = deepcopy(o)
     sin_branch = PauliSum(N)
  
     n_ops = zeros(Int,nt)
+    one_step = 4*N
+    cj = []
+    t_cj = 0.0
+    temp_norm = 0
+
+    for ki in 1:k
+        println("Step: ", ki, " of: ", k)
+
+        if ki == 1
+            for h in hj
+                state = adjoint(h) * initial_state
+                c_i = tr(state)
+                temp_norm += abs(c_i)
+            end
+        end
+
+        temp_cj = []
+        o_step = PauliSum(N)
+
+        for (oi_state, coeff_state) in initial_state.ops
+            o_transformed = PauliSum(N)
+            o_transformed += oi_state
+            # display(o_transformed)
+
+            for step in 1:one_step
+
+                g = generators[step]
     
-    for t in 1:nt
-
-        g = generators[t]
-
-        sin_branch = PauliSum(N)
-        temp_norm2 = 0
-
-        for (oi,coeff) in o_transformed.ops
-           
-            abs(coeff) > thresh || continue
-
-
-            if commute(oi, g.pauli) == false
-                
-                # cos branch
-                o_transformed[oi] = coeff * vcos[t]
-
-                # sin branch
-                oj = g * oi    # multiply the pauli's
-                sum!(sin_branch, oj * vsin[t] * coeff * 1im)
-  
-            end
-            temp_norm2+=abs(coeff)^2
-        end
-        sum!(o_transformed, sin_branch)
+                sin_branch = PauliSum(N)
+    
+                for (oi,coeff) in o_transformed.ops
+                    # abs(coeff) > thresh || continue
+    
+    
+                    if commute(oi, g.pauli) == false
+                        
+                        # cos branch
+                        o_transformed[oi] = coeff * vcos[step]
+    
+                        # sin branch
+                        oj = g * oi    # multiply the pauli's
+                        sum!(sin_branch, oj * coeff * vsin[step] * 1im)
         
-        for (oi, coeff) in o_transformed.ops
-            # x = oi.x
-            # z = oi.z
-            # ls = count_ones(x | z)
-            ls = weight(oi)
-            if ls > lc
-                # coeff *= exp(-γ * (ls - lc))
-                # if abs(coeff) < thresh
-                #     delete!(o_transformed.ops, oi)
-                # else
-                o_transformed[oi] = coeff * exp(-γ * (ls - lc))
-                # end
+                    end
+                end
+                sum!(o_transformed, sin_branch)
+                
+                # clip!(o_transformed, thresh=thresh)
+                # myclip!(o_transformed, thresh = thresh, lc=lc)
             end
+            o_transformed = dissipation(o_transformed, γ = γ, lc = lc)
+            o_transformed = mul!(o_transformed, coeff_state)
+            o_step += o_transformed
+
+        end 
+    
+        # println("Calculating the trace for C_j")
+        for h in hj
+            t_cj = tr(adjoint(h)*o_step)
+            push!(temp_cj, t_cj/temp_norm)
         end
-        # clip!(o_transformed, thresh=thresh)
-        myclip!(o_transformed, thresh = thresh, lc=lc)
-        n_ops[t] = length(o_transformed)
+          
+        initial_state = deepcopy(o_step)
+        println(temp_cj)
+        push!(cj, temp_cj)
+
+        println("--------------------------------------------------")
+
     end
 
-    coeff_norm2 = 0
-
-    for (oi,coeff) in o_transformed.ops
-        expval += coeff*expectation_value(oi, ket)
-        coeff_norm2+= abs(coeff)^2      # final list of operators
-    end
-    coeff_norm2 = sqrt(coeff_norm2)
-    # println(coeff_norm2)
-    # println("dfhvskjdvjksdfsdjkfsjhfkshfleshfkehfkl")
-
-    return expval, n_ops, coeff_norm2
+    return cj
 end
+
+
+    # for t in 1:nt
+
+    #     g = generators[t]
+
+    #     sin_branch = PauliSum(N)
+
+    #     for (oi,coeff) in o_transformed.ops
+           
+    #         abs(coeff) > thresh || continue
+
+
+    #         if commute(oi, g.pauli) == false
+                
+    #             # cos branch
+    #             o_transformed[oi] = coeff_i * coeff * vcos[t]
+
+    #             # sin branch
+    #             oj = g * oi    # multiply the pauli's
+    #             sum!(sin_branch, oj * coeff_i * vsin[t] * coeff * 1im)
+  
+    #         end
+    #     end
+    #     sum!(o_transformed, sin_branch)
+
+    #     if t%(4*N) == 0
+    #         # println("Dissipating")
+    #         # println(t)
+    #         o_transformed = dissipation(o_transformed, γ = γ, lc = lc)
+    #     end
+        
+    #     # clip!(o_transformed, thresh=thresh)
+    #     # myclip!(o_transformed, thresh = thresh, lc=lc)
+    #     n_ops[t] = length(o_transformed)
+    # end
+    # Final timestep without dissipation
+    # for t in 1:nt
+
+    #     g = generators[t]
+
+    #     sin_branch = PauliSum(N)
+
+    #     for (oi,coeff) in o_transformed.ops
+           
+    #         abs(coeff) > thresh || continue
+
+
+    #         if commute(oi, g.pauli) == false
+                
+    #             # cos branch
+    #             o_transformed[oi] = coeff_i * coeff * vcos[t]
+
+    #             # sin branch
+    #             oj = g * oi    # multiply the pauli's
+    #             sum!(sin_branch, oj * coeff_i * vsin[t] * coeff * 1im)
+  
+    #         end
+    #     end
+    #     sum!(o_transformed, sin_branch)
+
+    #     if t%(4*N) == 0
+    #         # o_transformed = dissipation(o_transformed, γ = γ, lc = lc)
+    #         n_ops[t] = length(o_transformed) 
+    #         break
+    #     end
+        
+    #     # clip!(o_transformed, thresh=thresh)
+    #     # myclip!(o_transformed, thresh = thresh, lc=lc)
+    #     n_ops[t] = length(o_transformed)
+    # end
+
+    # println(coeff_norm2)
+
 
