@@ -950,12 +950,13 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k; 
                 end
                 sum!(o_transformed, sin_branch)
                 
-                # clip!(o_transformed, thresh=thresh)
                 # myclip!(o_transformed, thresh = thresh, lc=lc)
             end
             o_transformed = dissipation(o_transformed, γ = γ, lc = lc)
-            o_transformed = mul!(o_transformed, coeff_state)
-            o_step += o_transformed
+            mul!(o_transformed, coeff_state)
+            clip!(o_transformed, thresh=thresh)
+
+            sum!(o_step, o_transformed)
 
         end 
     
@@ -966,7 +967,7 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k; 
         end
           
         initial_state = deepcopy(o_step)
-        println(temp_cj)
+        # println(temp_cj)
         push!(cj, temp_cj)
 
         println("--------------------------------------------------")
