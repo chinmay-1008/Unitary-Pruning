@@ -873,23 +873,17 @@ function bfs_evolution_diff(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}
 end
 
 function dissipation(o::PauliSum{N}; γ = 0.1, lc = 0) where N
-    o_transformed_d = deepcopy(o)
-    # temp_coeff = Float64(0)
-    for (oi_d, coeff_d) in o_transformed_d.ops
+    for (oi_d, coeff_d) in o.ops
         ls = weight(oi_d)
         if ls >= lc
-            # temp_coeff = coeff_d * exp(-γ*(ls - lc))
-            o_transformed_d[oi_d] = coeff_d * exp(-γ*(ls - lc))
-            # println(exp(-γ*(ls - lc)))
-            # println("Transform: ", coeff_d, " to: ", coeff_d * exp(-γ*(ls - lc)))
+            o[oi_d] = coeff_d * exp(-γ*(ls - lc))
         end
     end 
-
-    return o_transformed_d
+    return o
 end
 
 
-function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k, dt, T; thresh=1e-3,γ = 0, lc = 0) where {N}
+function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, initial_state, hj, k, dt, T; thresh=1e-3,γ = 0, lc = 0) where {N}
 
     #
     # for a single pauli Unitary, U = exp(-i θn Pn/2)
@@ -898,29 +892,24 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k, 
     length(angles) == nt || throw(DimensionMismatch)
     vcos = cos.(2.0*angles)
     vsin = sin.(2.0*angles)
- 
-    initial_state = deepcopy(o)
-    sin_branch = PauliSum(N)
- 
-    n_ops = zeros(Int,nt)
+  
     one_step = 4*N
-    cj = []
-    t_cj = 0.0
+    cj = Vector{Vector{Float64}}(undef, Int64(k))
     temp_norm = 0
+
+    if !isempty(hj)
+        for h in hj
+            state = adjoint(h) * initial_state
+            temp_norm += abs(tr(state))
+        end
+    end
 
     for ki in 1:k
         println("Step: ", ki, " of: ", k)
-        println("Number of ops: ", length(initial_state))
+        # println("Number of ops: ", length(initial_state))
 
-        if ki == 1
-            for h in hj
-                state = adjoint(h) * initial_state
-                c_i = tr(state)
-                temp_norm += abs(c_i)
-            end
-        end
+        temp_cj = Vector{Float64}(undef, length(hj))
 
-        temp_cj = []
         o_step = PauliSum(N)
         l = ReentrantLock()
         
@@ -961,21 +950,18 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k, 
             clip!(o_transformed, thresh=thresh)
 
             # lock(l) do
-                # sum!(o_step, o_transformed)
+            #     sum!(o_step, o_transformed)
             # end
             sum!(o_step, o_transformed)
 
         end 
     
-        # println("Calculating the trace for C_j")
-        for h in hj
-            t_cj = tr(adjoint(h)*o_step)
-            push!(temp_cj, t_cj/temp_norm)
+        for (idx, h) in enumerate(hj)
+            temp_cj[idx] = tr(adjoint(h) * o_step) / temp_norm
         end
           
-        initial_state = deepcopy(o_step)
-        # println(temp_cj)
-        push!(cj, temp_cj)
+        initial_state = o_step
+        cj[Int64(ki)] = temp_cj
 
         println("--------------------------------------------------")
 

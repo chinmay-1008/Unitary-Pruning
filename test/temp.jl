@@ -22,27 +22,27 @@ temp_pauli, h = tilted_ising(5, 1, 1)
 temp_pauli_1, h_1 = tilted_ising(5, 1.32, 2.65)
 
 # display(temp_pauli)
-sin = PauliSum(5)
+sin_b = PauliSum(5)
 l = ReentrantLock()
-
+cos_b = PauliSum(5)
 @Threads.threads for (i, j) in collect(temp_pauli.ops)
-    cos = PauliSum(5) + h[1]
+    cos_b = PauliSum(5) + h[1]
 
     for m in 1:4
-        tan = PauliSum(5)
-        for (a, b) in cos.ops
-            sum!(tan, a*b*0.5)
+        tan_b = PauliSum(5)
+        for (a, b) in cos_b.ops
+            sum!(tan_b, a*b*0.5)
         end
 
-        sum!(cos, tan)
+        sum!(cos_b, tan_b)
 
     end
     lock(l) do 
-        sum!(sin, cos)
+        sum!(sin_b, cos_b)
     end
 
 end
 
-display(sin)
+display(sin_b)
 
 

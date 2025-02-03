@@ -75,7 +75,7 @@ function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0, thre
 
     k = floor(T/dt)
     generators, parameters = generator_ising(N, Jx = Jx, Jz = Jz, dt = dt, k = 1)
-    c_j, final_state = UnitaryPruning.bfs_evolution_new_diff(generators, parameters, o, hj, k, dt, T, thresh =thresh, γ = γ, lc = lc)
+@time c_j, final_state = UnitaryPruning.bfs_evolution_new_diff(generators, parameters, o, hj, k, dt, T, thresh =thresh, γ = γ, lc = lc)
 
     # o_transformed = PauliSum(N)
 
@@ -107,8 +107,8 @@ function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0, thre
     xlabel!("Time")
     ylabel!("MSD")
     title!("(N=$N; dt=$dt; thresh = $thresh; γ=$γ, l* = $lc)")
-    savefig("test/new_diff_N$N-paper-$dt-$T-$thresh-$γ.pdf")
+    # savefig("test/new_diff_N$N-paper-$dt-$T-$thresh-$γ.pdf")
 end    
 
 
-@time run(N = 5, Jx = 1.4, Jz = 0.9045, dt = 0.1, T = 10, γ = 0.25, lc = 2, thresh = 1e-3)
+run(N = 7, Jx = 1.4, Jz = 0.9045, dt = 0.1, T = 10, γ = 0.25, lc = 2, thresh = 1e-3)
