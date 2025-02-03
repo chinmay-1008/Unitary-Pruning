@@ -973,7 +973,7 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k; 
         println("--------------------------------------------------")
 
     end
-
+#hello
     return cj
 end
 
