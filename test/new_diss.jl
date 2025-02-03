@@ -63,7 +63,7 @@ function msd(N, cj)
 end
 
 
-function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0)
+function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0, thresh = 0)
     H_i, hj = tilted_ising(N, Jx, Jz)
     o = hj[Int64((N+1)/2)] 
 
@@ -73,9 +73,9 @@ function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0)
     println("State: ")
     display(o)
 
-    k = T/dt
+    k = floor(T/dt)
     generators, parameters = generator_ising(N, Jx = Jx, Jz = Jz, dt = dt, k = 1)
-    c_j = UnitaryPruning.bfs_evolution_new_diff(generators, parameters, o, hj, k, thresh =1e-3, γ = γ, lc = lc)
+    c_j, final_state = UnitaryPruning.bfs_evolution_new_diff(generators, parameters, o, hj, k, dt, T, thresh =thresh, γ = γ, lc = lc)
 
     # o_transformed = PauliSum(N)
 
@@ -90,8 +90,8 @@ function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0)
     #     o_transformed += temp_o
     # end 
 
-    println(" ")
-    println(c_j)
+    # println(" ")
+    # println(c_j)
     # println("Evolved State: ")
     # display(o_transformed)
     # println("Max operators: ", max(n_ops))
@@ -106,9 +106,9 @@ function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0)
     plot(time_steps, val)
     xlabel!("Time")
     ylabel!("MSD")
-    title!("(N=7; dt=0.25; thresh = 1e-3; γ=0.03, l* = 2)")
-    savefig("test/new_diff_N$N-paper-$thres-$dt.pdf")
+    title!("(N=$N; dt=$dt; thresh = $thresh; γ=$γ, l* = $lc)")
+    savefig("test/new_diff_N$N-paper-$dt-$T-$thresh-$γ.pdf")
 end    
 
 
-run(N = 7, Jx = 1.4, Jz = 0.9045, dt = 0.1, T = 10, γ = 0.25, lc = 2)
+@time run(N = 5, Jx = 1.4, Jz = 0.9045, dt = 0.1, T = 10, γ = 0.25, lc = 2, thresh = 1e-3)

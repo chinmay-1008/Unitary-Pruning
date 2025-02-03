@@ -889,7 +889,7 @@ function dissipation(o::PauliSum{N}; γ = 0.1, lc = 0) where N
 end
 
 
-function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k; thresh=1e-3,γ = 0, lc = 0) where {N}
+function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k, dt, T; thresh=1e-3,γ = 0, lc = 0) where {N}
 
     #
     # for a single pauli Unitary, U = exp(-i θn Pn/2)
@@ -910,6 +910,7 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k; 
 
     for ki in 1:k
         println("Step: ", ki, " of: ", k)
+        println("Number of ops: ", length(initial_state))
 
         if ki == 1
             for h in hj
@@ -921,7 +922,9 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k; 
 
         temp_cj = []
         o_step = PauliSum(N)
-
+        l = ReentrantLock()
+        
+        # Threads.@threads for (oi_state, coeff_state) in collect(initial_state.ops)
         for (oi_state, coeff_state) in initial_state.ops
             o_transformed = PauliSum(N)
             o_transformed += oi_state
@@ -952,10 +955,14 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k; 
                 
                 # myclip!(o_transformed, thresh = thresh, lc=lc)
             end
-            o_transformed = dissipation(o_transformed, γ = γ, lc = lc)
             mul!(o_transformed, coeff_state)
+            o_transformed = dissipation(o_transformed, γ = γ, lc = lc)
+
             clip!(o_transformed, thresh=thresh)
 
+            # lock(l) do
+                # sum!(o_step, o_transformed)
+            # end
             sum!(o_step, o_transformed)
 
         end 
@@ -973,8 +980,7 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, o, hj, k; 
         println("--------------------------------------------------")
 
     end
-#hello
-    return cj
+    return cj, initial_state
 end
 
 
