@@ -4,6 +4,7 @@ using Plots
 using DelimitedFiles
 using Printf
 using LinearAlgebra
+using StatProfilerHTML
 
 
 function tilted_ising(N, Jx, Jz)
@@ -24,7 +25,6 @@ end
 function generator_ising(N; Jx, Jz, dt, k)
     generators = Vector{Pauli{N}}([])
     parameters = Vector{Float64}([])
-    # count = 0
     # Loop over sites
     for ki in 1:k 
         for i in 1:N
@@ -77,32 +77,9 @@ function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0, thre
     generators, parameters = generator_ising(N, Jx = Jx, Jz = Jz, dt = dt, k = 1)
 @time c_j, final_state = UnitaryPruning.bfs_evolution_new_diff(generators, parameters, o, hj, k, dt, T, thresh =thresh, γ = γ, lc = lc)
 
-    # o_transformed = PauliSum(N)
-
-    # for (oi, coeff) in o.ops
-    #     temp_oi = PauliSum(N)
-    #     println(" ")
-    #     println("Initial Operator: ")
-    #     display(oi)
-    #     oi += temp_oi
-    #     temp_o, n_ops = UnitaryPruning.bfs_evolution_new_diff(generators, parameters, oi, hj, coeff, k, thresh = 0, γ = γ, lc = lc)
-    #     println("Number of operators after evolution: ", maximum(n_ops))
-    #     o_transformed += temp_o
-    # end 
-
-    # println(" ")
-    # println(c_j)
-    # println("Evolved State: ")
-    # display(o_transformed)
-    # println("Max operators: ", max(n_ops))
-    # c = adjoint(hj[1]) * o_transformed
-    # println(length(o_transformed), " ", length(c)," ", length(hj[1]))
-    # for (oi, coeff) in o
-    # final_o, final_nops = UnitaryPruning.bfs_evolution_new_diff(generators, parameters,)
-    # o_diss = dissipation(o_transformed, γ = 0.01, lc = 2)
-    # display(o_diss)
     val = msd(N, c_j)
     time_steps = [dt*j for j in 1:k]
+
     plot(time_steps, val)
     xlabel!("Time")
     ylabel!("MSD")
@@ -111,4 +88,4 @@ function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0, thre
 end    
 
 
-run(N = 7, Jx = 1.4, Jz = 0.9045, dt = 0.1, T = 10, γ = 0.25, lc = 2, thresh = 1e-3)
+run(N = 9, Jx = 1.4, Jz = 0.9045, dt = 0.1, T = 10, γ = 0.25, lc = 2, thresh = 1e-3)

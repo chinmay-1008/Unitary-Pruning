@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'></meta>
+    <link rel='stylesheet' type='text/css' href='statprofiler.css'></link>
+    <title>StatProfilerHTML - ../../.julia/packages/PauliOperators/uKRkB/src/function_add.jl</title>
+  </head>
+  <body>
+    <div class='report-header'>
+      <div class='backlink'>
+        <a href='index.html'>Report index</a>
+      </div>
+      <div class='report-title'>
+        StatProfilerHTML.jl report
+      </div>
+      <div class='generated-on'>
+        Generated on Tue, 04 Feb 2025 10:50:58
+      </div>
+    </div>
+    <table>
+      <caption>File source code</caption>
+      <thead>
+        <tr>
+          <th>Line</th>
+          <th>Exclusive</th>
+          <th>Inclusive</th>
+          <th>Code</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr id='L1'>
+          <td class='lineno'>1</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'># </span>
+          </td>
+        </tr>
+        <tr id='L2'>
+          <td class='lineno'>2</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>function Base.:&#43;&#40;p1::ScaledPauli&#123;N&#125;, p2::ScaledPauli&#123;N&#125;&#41; where &#123;T,N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L3'>
+          <td class='lineno'>3</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    # if isequal&#40;p1.pauli, p2.pauli&#41;</span>
+          </td>
+        </tr>
+        <tr id='L4'>
+          <td class='lineno'>4</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    #     return Vector&#123;ScaledPauli&#123;N&#125;&#125;&#40;&#91;ScaledPauli&#123;N&#125;&#40;get_coeff&#40;p1&#41; &#43; get_coeff&#40;p2&#41;, phasefree&#40;p1.pauli&#41;&#41;&#93;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L5'>
+          <td class='lineno'>5</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    # else</span>
+          </td>
+        </tr>
+        <tr id='L6'>
+          <td class='lineno'>6</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    #     return Vector&#123;ScaledPauli&#123;N&#125;&#125;&#40;&#91;p1, p2&#93;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L7'>
+          <td class='lineno'>7</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    # end</span>
+          </td>
+        </tr>
+        <tr id='L8'>
+          <td class='lineno'>8</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    if isequal&#40;p1.pauli, p2.pauli&#41;</span>
+          </td>
+        </tr>
+        <tr id='L9'>
+          <td class='lineno'>9</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>        return PauliSum&#123;N&#125;&#40;Dict&#123;FixedPhasePauli&#123;N&#125;,ComplexF64&#125;&#40;p1.pauli&#61;&gt;p1.coeff&#43;p2.coeff&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L10'>
+          <td class='lineno'>10</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    else</span>
+          </td>
+        </tr>
+        <tr id='L11'>
+          <td class='lineno'>11</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>        return PauliSum&#123;N&#125;&#40;Dict&#123;FixedPhasePauli&#123;N&#125;,ComplexF64&#125;&#40;p1.pauli&#61;&gt;p1.coeff, p2.pauli&#61;&gt;p2.coeff&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L12'>
+          <td class='lineno'>12</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    end</span>
+          </td>
+        </tr>
+        <tr id='L13'>
+          <td class='lineno'>13</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>end</span>
+          </td>
+        </tr>
+        <tr id='L14'>
+          <td class='lineno'>14</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>function Base.:&#43;&#40;p::ScaledPauli&#123;N&#125;, a::Number&#41; where &#123;T,N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L15'>
+          <td class='lineno'>15</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    return p &#43; ScaledPauli&#123;N&#125;&#40;a, Pauli&#123;N&#125;&#40;0,FixedPhasePauli&#123;N&#125;&#40;0,0&#41;&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L16'>
+          <td class='lineno'>16</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>end</span>
+          </td>
+        </tr>
+        <tr id='L17'>
+          <td class='lineno'>17</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.:&#43;&#40;p::ScaledPauli&#123;N&#125;, a::Pauli&#123;N&#125;&#41; where &#123;T,N&#125; &#61; p &#43; ScaledPauli&#123;N&#125;&#40;1, a&#41;</span>
+          </td>
+        </tr>
+        <tr id='L18'>
+          <td class='lineno'>18</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.:&#43;&#40;a::Pauli&#123;N&#125;, p::ScaledPauli&#123;N&#125;&#41; where &#123;T,N&#125; &#61; p &#43; a </span>
+          </td>
+        </tr>
+        <tr id='L19'>
+          <td class='lineno'>19</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L20'>
+          <td class='lineno'>20</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>&quot;&quot;&quot;</span>
+          </td>
+        </tr>
+        <tr id='L21'>
+          <td class='lineno'>21</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    Base.:&#43;&#40;p1::Pauli&#123;N&#125;, p2::Pauli&#123;N&#125;&#41; where &#123;N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L22'>
+          <td class='lineno'>22</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L23'>
+          <td class='lineno'>23</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Add two &#96;Pauli&#96;&#39;s together. This returns a &#96;PauliSum&#96;</span>
+          </td>
+        </tr>
+        <tr id='L24'>
+          <td class='lineno'>24</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>&quot;&quot;&quot;</span>
+          </td>
+        </tr>
+        <tr id='L25'>
+          <td class='lineno'>25</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>function Base.:&#43;&#40;p1::Pauli&#123;N&#125;, p2::Pauli&#123;N&#125;&#41; where &#123;N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L26'>
+          <td class='lineno'>26</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    if phasefree&#40;p1&#41; &#61;&#61; phasefree&#40;p2&#41; </span>
+          </td>
+        </tr>
+        <tr id='L27'>
+          <td class='lineno'>27</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>        return PauliSum&#123;N&#125;&#40;Dict&#40;phasefree&#40;p1&#41;&#61;&gt;get_phase&#40;p1&#41;&#43;get_phase&#40;p2&#41;&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L28'>
+          <td class='lineno'>28</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    else</span>
+          </td>
+        </tr>
+        <tr id='L29'>
+          <td class='lineno'>29</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>        return PauliSum&#123;N&#125;&#40;Dict&#40;phasefree&#40;p1&#41;&#61;&gt;get_phase&#40;p1&#41;, phasefree&#40;p2&#41;&#61;&gt;get_phase&#40;p2&#41;&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L30'>
+          <td class='lineno'>30</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    end</span>
+          </td>
+        </tr>
+        <tr id='L31'>
+          <td class='lineno'>31</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>end</span>
+          </td>
+        </tr>
+        <tr id='L32'>
+          <td class='lineno'>32</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>function Base.:&#43;&#40;p1::Pauli&#123;N&#125;, p2::FixedPhasePauli&#123;N&#125;&#41; where &#123;N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L33'>
+          <td class='lineno'>33</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    if p1.z &#61;&#61; p2.z &amp; p1.x &#61;&#61; p2.x </span>
+          </td>
+        </tr>
+        <tr id='L34'>
+          <td class='lineno'>34</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>        return PauliSum&#123;N&#125;&#40;Dict&#40;phasefree&#40;p1&#41;&#61;&gt;get_phase&#40;p1&#41;&#43;get_phase&#40;p2&#41;&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L35'>
+          <td class='lineno'>35</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    else</span>
+          </td>
+        </tr>
+        <tr id='L36'>
+          <td class='lineno'>36</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>        return PauliSum&#123;N&#125;&#40;Dict&#40;phasefree&#40;p1&#41;&#61;&gt;get_phase&#40;p1&#41;, Pauli&#40;p2&#41;&#61;&gt;get_phase&#40;p2&#41;&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L37'>
+          <td class='lineno'>37</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    end</span>
+          </td>
+        </tr>
+        <tr id='L38'>
+          <td class='lineno'>38</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>end</span>
+          </td>
+        </tr>
+        <tr id='L39'>
+          <td class='lineno'>39</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>function Base.:&#43;&#40;p1::FixedPhasePauli&#123;N&#125;, p2::FixedPhasePauli&#123;N&#125;&#41; where &#123;N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L40'>
+          <td class='lineno'>40</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    if p1 &#61;&#61; p2 </span>
+          </td>
+        </tr>
+        <tr id='L41'>
+          <td class='lineno'>41</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>        return PauliSum&#123;N&#125;&#40;Dict&#40;p1&#61;&gt;2&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L42'>
+          <td class='lineno'>42</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    else</span>
+          </td>
+        </tr>
+        <tr id='L43'>
+          <td class='lineno'>43</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>        return PauliSum&#123;N&#125;&#40;Dict&#40;p1&#61;&gt;1, p2&#61;&gt;1&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L44'>
+          <td class='lineno'>44</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    end</span>
+          </td>
+        </tr>
+        <tr id='L45'>
+          <td class='lineno'>45</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>end</span>
+          </td>
+        </tr>
+        <tr id='L46'>
+          <td class='lineno'>46</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L47'>
+          <td class='lineno'>47</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L48'>
+          <td class='lineno'>48</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            <div class='call-sites'>
+              5 &#40;0 &#37;&#41;
+              samples spent in &#43;
+              <br />
+              
+              5 &#40;100 &#37;&#41; &#40;incl.&#41;
+              when called from #bfs_evolution_new_diff#64
+              <a href='deterministic_evolution.jl-a10f553bc232401c6517292c3f0b67806cf126e0.html#L919'>line 919</a>
+              <br />
+            </div>
+            
+            <span class='code'>function Base.:&#43;&#40;ps::PauliSum&#123;N&#125;, p::FixedPhasePauli&#123;N&#125;&#41; where &#123;N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L49'>
+          <td class='lineno'>49</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'>2 &#40;0 &#37;&#41;</td>
+          <td>
+            
+            <div class='callees'>
+              2 &#40;100 &#37;&#41;
+              samples spent calling
+              <a href='deepcopy.jl-aa9e2b4a0b19194cfd26b40e582cd0acea96180e.html#L29'>deepcopy</a>
+              <br />
+            </div>
+            <span class='code'>    out &#61; deepcopy&#40;ps&#41;</span>
+          </td>
+        </tr>
+        <tr id='L50'>
+          <td class='lineno'>50</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'>3 &#40;0 &#37;&#41;</td>
+          <td>
+            
+            <div class='callees'>
+              3 &#40;100 &#37;&#41;
+              samples spent calling
+              <a href='function_add.jl-794a384ae71bad2bc16ecc18b1aba23a78dc4d1c.html#L75'>sum&#33;</a>
+              <br />
+            </div>
+            <span class='code'>    sum&#33;&#40;out, p&#41;</span>
+          </td>
+        </tr>
+        <tr id='L51'>
+          <td class='lineno'>51</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    return out</span>
+          </td>
+        </tr>
+        <tr id='L52'>
+          <td class='lineno'>52</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>end</span>
+          </td>
+        </tr>
+        <tr id='L53'>
+          <td class='lineno'>53</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>function Base.:&#43;&#40;ps::PauliSum&#123;N&#125;, p::Pauli&#123;N&#125;&#41; where &#123;N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L54'>
+          <td class='lineno'>54</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    out &#61; deepcopy&#40;ps&#41;</span>
+          </td>
+        </tr>
+        <tr id='L55'>
+          <td class='lineno'>55</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    sum&#33;&#40;out, p&#41;</span>
+          </td>
+        </tr>
+        <tr id='L56'>
+          <td class='lineno'>56</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    return out</span>
+          </td>
+        </tr>
+        <tr id='L57'>
+          <td class='lineno'>57</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>end</span>
+          </td>
+        </tr>
+        <tr id='L58'>
+          <td class='lineno'>58</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>function Base.:&#43;&#40;ps::PauliSum&#123;N&#125;, p::ScaledPauli&#123;N&#125;&#41; where &#123;N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L59'>
+          <td class='lineno'>59</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    out &#61; deepcopy&#40;ps&#41;</span>
+          </td>
+        </tr>
+        <tr id='L60'>
+          <td class='lineno'>60</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    sum&#33;&#40;out, p&#41;</span>
+          </td>
+        </tr>
+        <tr id='L61'>
+          <td class='lineno'>61</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    return out</span>
+          </td>
+        </tr>
+        <tr id='L62'>
+          <td class='lineno'>62</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>end</span>
+          </td>
+        </tr>
+        <tr id='L63'>
+          <td class='lineno'>63</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.:&#43;&#40;p::FixedPhasePauli&#123;N&#125;, ps::PauliSum&#123;N&#125;&#41; where &#123;N&#125; &#61; ps &#43; p</span>
+          </td>
+        </tr>
+        <tr id='L64'>
+          <td class='lineno'>64</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.:&#43;&#40;p::Pauli&#123;N&#125;, ps::PauliSum&#123;N&#125;&#41; where &#123;N&#125; &#61; ps &#43; p</span>
+          </td>
+        </tr>
+        <tr id='L65'>
+          <td class='lineno'>65</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.:&#43;&#40;p::ScaledPauli&#123;N&#125;, ps::PauliSum&#123;N&#125;&#41; where &#123;N&#125; &#61; ps &#43; p</span>
+          </td>
+        </tr>
+        <tr id='L66'>
+          <td class='lineno'>66</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.:&#43;&#40;p::FixedPhasePauli&#123;N&#125;, ps::Pauli&#123;N&#125;&#41; where &#123;N&#125; &#61; ps &#43; p</span>
+          </td>
+        </tr>
+        <tr id='L67'>
+          <td class='lineno'>67</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.:&#43;&#40;ps1::PauliSum&#123;N&#125;, ps2::PauliSum&#123;N&#125;&#41; where &#123;N&#125; &#61; PauliSum&#123;N&#125;&#40;mergewith&#40;&#43;, ps1.ops, ps2.ops&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L68'>
+          <td class='lineno'>68</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L69'>
+          <td class='lineno'>69</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L70'>
+          <td class='lineno'>70</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>&quot;&quot;&quot;</span>
+          </td>
+        </tr>
+        <tr id='L71'>
+          <td class='lineno'>71</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    Base.sum&#33;&#40;p1::PauliSum&#123;N&#125;, p2::Pauli&#123;N&#125;&#41; where &#123;N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L72'>
+          <td class='lineno'>72</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L73'>
+          <td class='lineno'>73</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Add a &#96;Pauli&#96; to a PauliSum. </span>
+          </td>
+        </tr>
+        <tr id='L74'>
+          <td class='lineno'>74</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>&quot;&quot;&quot;</span>
+          </td>
+        </tr>
+        <tr id='L75'>
+          <td class='lineno'>75</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'>3 &#40;0 &#37;&#41;</td>
+          <td>
+            <div class='call-sites'>
+              3 &#40;0 &#37;&#41;
+              samples spent in sum&#33;
+              <br />
+              
+              3 &#40;100 &#37;&#41; &#40;incl.&#41;
+              when called from &#43;
+              <a href='function_add.jl-794a384ae71bad2bc16ecc18b1aba23a78dc4d1c.html#L50'>line 50</a>
+              <br />
+            </div>
+            <div class='callees'>
+              2 &#40;67 &#37;&#41;
+              samples spent calling
+              <a href='type_PauliSum.jl-378a1b2c7ba898f75ce973d267bf36a35baf87b2.html#L45'>setindex&#33;</a>
+              <br />
+              1 &#40;33 &#37;&#41;
+              samples spent calling
+              <a href='type_PauliSum.jl-378a1b2c7ba898f75ce973d267bf36a35baf87b2.html#L38'>get</a>
+              <br />
+            </div>
+            <span class='code'>Base.sum&#33;&#40;ps::PauliSum&#123;N&#125;, p::FixedPhasePauli&#123;N&#125;&#41; where &#123;N&#125; &#61; ps&#91;p&#93; &#61; get&#40;ps, p&#41; &#43; 1 </span>
+          </td>
+        </tr>
+        <tr id='L76'>
+          <td class='lineno'>76</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.sum&#33;&#40;ps::PauliSum&#123;N&#125;, p::Pauli&#123;N&#125;&#41; where &#123;N&#125; &#61; ps&#91;p.pauli&#93; &#61; get&#40;ps, p.pauli&#41; &#43; get_phase&#40;p&#41; </span>
+          </td>
+        </tr>
+        <tr id='L77'>
+          <td class='lineno'>77</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'>1549 &#40;7 &#37;&#41;</td>
+          <td>
+            <div class='call-sites'>
+              1549 &#40;7 &#37;&#41;
+              samples spent in sum&#33;
+              <br />
+              
+              1549 &#40;100 &#37;&#41; &#40;incl.&#41;
+              when called from #bfs_evolution_new_diff#64
+              <a href='deterministic_evolution.jl-a10f553bc232401c6517292c3f0b67806cf126e0.html#L939'>line 939</a>
+              <br />
+            </div>
+            <div class='callees'>
+              1190 &#40;77 &#37;&#41;
+              samples spent calling
+              <a href='type_PauliSum.jl-378a1b2c7ba898f75ce973d267bf36a35baf87b2.html#L45'>setindex&#33;</a>
+              <br />
+              349 &#40;23 &#37;&#41;
+              samples spent calling
+              <a href='type_PauliSum.jl-378a1b2c7ba898f75ce973d267bf36a35baf87b2.html#L38'>get</a>
+              <br />
+              10 &#40;1 &#37;&#41;
+              samples spent calling
+              <a href='complex.jl-5d76e35647e1c2c6e63ef2da9f87eeae132d92bc.html#L297'>&#43;</a>
+              <br />
+            </div>
+            <span class='code'>Base.sum&#33;&#40;ps::PauliSum&#123;N&#125;, p::ScaledPauli&#123;N&#125;&#41; where &#123;N&#125; &#61; ps&#91;p.pauli&#93; &#61; get&#40;ps, p.pauli&#41; &#43; p.coeff </span>
+          </td>
+        </tr>
+        <tr id='L78'>
+          <td class='lineno'>78</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.sum&#33;&#40;ps::Vector&#123;ScaledPauli&#123;N&#125;&#125;, p::ScaledPauli&#123;N&#125;&#41; where &#123;T,N&#125; &#61; push&#33;&#40;ps, p&#41;</span>
+          </td>
+        </tr>
+        <tr id='L79'>
+          <td class='lineno'>79</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.sum&#33;&#40;ps::Vector&#123;ScaledPauli&#123;N&#125;&#125;, p::Pauli&#123;N&#125;&#41; where &#123;T,N&#125; &#61; push&#33;&#40;ps, ScaledPauli&#40;p&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L80'>
+          <td class='lineno'>80</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.sum&#33;&#40;ps::Vector&#123;ScaledPauli&#123;N&#125;&#125;, p::FixedPhasePauli&#123;N&#125;&#41; where &#123;T,N&#125; &#61; push&#33;&#40;ps, ScaledPauli&#40;p&#41;&#41;</span>
+          </td>
+        </tr>
+        <tr id='L81'>
+          <td class='lineno'>81</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L82'>
+          <td class='lineno'>82</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>function Base.:&#43;&#40;p1::Vector&#123;ScaledPauli&#123;N&#125;&#125;, p2::Vector&#123;ScaledPauli&#123;N&#125;&#125;&#41; where &#123;T,N&#125;</span>
+          </td>
+        </tr>
+        <tr id='L83'>
+          <td class='lineno'>83</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    out &#61; deepcopy&#40;p1&#41;</span>
+          </td>
+        </tr>
+        <tr id='L84'>
+          <td class='lineno'>84</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    append&#33;&#40;out, p2&#41;</span>
+          </td>
+        </tr>
+        <tr id='L85'>
+          <td class='lineno'>85</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>    return out </span>
+          </td>
+        </tr>
+        <tr id='L86'>
+          <td class='lineno'>86</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>end</span>
+          </td>
+        </tr>
+        <tr id='L87'>
+          <td class='lineno'>87</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L88'>
+          <td class='lineno'>88</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L89'>
+          <td class='lineno'>89</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L90'>
+          <td class='lineno'>90</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L91'>
+          <td class='lineno'>91</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L92'>
+          <td class='lineno'>92</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L93'>
+          <td class='lineno'>93</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'></span>
+          </td>
+        </tr>
+        <tr id='L94'>
+          <td class='lineno'>94</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.sum&#33;&#40;vs::SparseKetBasis&#123;N,T&#125;, k::KetBitString&#123;N&#125;&#41; where &#123;N,T&#125; &#61; vs&#91;k&#93; &#61; get&#40;vs, k, 0&#41;&#43;1 </span>
+          </td>
+        </tr>
+        <tr id='L95'>
+          <td class='lineno'>95</td>
+          <td class='tracecount excl'></td>
+          <td class='tracecount incl'></td>
+          <td>
+            
+            
+            <span class='code'>Base.sum&#33;&#40;vs::SparseKetBasis&#123;N,T&#125;, k::KetBitString&#123;N&#125;, c&#41; where &#123;N,T&#125; &#61; vs&#91;k&#93; &#61; get&#40;vs, k, 0&#41;&#43;c </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
+

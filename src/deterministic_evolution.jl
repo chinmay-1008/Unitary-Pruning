@@ -876,7 +876,7 @@ function dissipation(o::PauliSum{N}; γ = 0.1, lc = 0) where N
     for (oi_d, coeff_d) in o.ops
         ls = weight(oi_d)
         if ls >= lc
-            o[oi_d] = coeff_d * exp(-γ*(ls - lc))
+            o[oi_d] = coeff_d* exp(-γ*(ls - lc))
         end
     end 
     return o
@@ -950,7 +950,7 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, initial_st
             clip!(o_transformed, thresh=thresh)
 
             # lock(l) do
-            #     sum!(o_step, o_transformed)
+                # sum!(o_step, o_transformed)
             # end
             sum!(o_step, o_transformed)
 
