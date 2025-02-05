@@ -950,7 +950,7 @@ function bfs_evolution_new_diff(generators::Vector{Pauli{N}}, angles, initial_st
             clip!(o_transformed, thresh=thresh)
 
             # lock(l) do
-                # sum!(o_step, o_transformed)
+            #     sum!(o_step, o_transformed)
             # end
             sum!(o_step, o_transformed)
 

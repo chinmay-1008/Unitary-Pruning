@@ -1,3 +1,7 @@
+using Random, Distributions
+using BenchmarkTools
+using LinearAlgebra
+
 function tree_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3) where {N}
 
     #
@@ -13,6 +17,7 @@ function tree_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ke
 
 
     o_transformed = deepcopy(o)
+    dicts = Vector(undef, nt)    
     sin_branch = PauliSum(N)
  
     n_ops = zeros(Int,nt)
@@ -44,6 +49,9 @@ function tree_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ke
         sum!(o_transformed, sin_branch) 
         clip!(o_transformed, thresh=thresh)
         n_ops[t] = length(o_transformed)
+        println((n_ops[t]))
+        # println(o_transformed)
+        dicts[t] = deepcopy(o_transformed)
     end
 
     coeff_norm2 = 0
@@ -56,5 +64,5 @@ function tree_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ke
     # println(coeff_norm2)
     # println("dfhvskjdvjksdfsdjkfsjhfkshfleshfkehfkl")
 
-    return expval, n_ops, coeff_norm2
+    return expval, n_ops, coeff_norm2, dicts
 end

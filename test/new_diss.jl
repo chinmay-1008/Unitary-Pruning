@@ -4,7 +4,6 @@ using Plots
 using DelimitedFiles
 using Printf
 using LinearAlgebra
-using StatProfilerHTML
 
 
 function tilted_ising(N, Jx, Jz)
@@ -84,8 +83,8 @@ function run(;N = 10, Jx = 1.0, Jz = 1.0, dt = 0.1, T = 10, γ = 0, lc = 0, thre
     xlabel!("Time")
     ylabel!("MSD")
     title!("(N=$N; dt=$dt; thresh = $thresh; γ=$γ, l* = $lc)")
-    # savefig("test/new_diff_N$N-paper-$dt-$T-$thresh-$γ.pdf")
+    savefig("test/new_diff_N$N-paper-$dt-$T-$thresh-$γ.pdf")
 end    
 
 
-run(N = 9, Jx = 1.4, Jz = 0.9045, dt = 0.1, T = 10, γ = 0.25, lc = 2, thresh = 1e-3)
+run(N = 9, Jx = 1.4, Jz = 0.9045, dt = 0.25, T = 20, γ = 0.03, lc = 2, thresh = 1e-3)
