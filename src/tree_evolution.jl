@@ -67,6 +67,17 @@ function tree_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ke
     return expval, n_ops, coeff_norm2, dicts
 end
 
+function otoc_expectation_value(o_oto_1::PauliSum{N}, o_otoc_2::PauliSum{N}, ket) where {N}
+    output = 0
+
+    for (oi_1, coeff_1) in o_oto_1.ops
+        for (oi_2, coeff_2) in o_otoc_2.ops
+            output += expectation_value(oi_1*oi_2, ket)*coeff_1*coeff_2
+        end
+    end
+
+    return output
+end
 
 function tree_evolution_otoc(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3) where {N}
 
@@ -80,13 +91,14 @@ function tree_evolution_otoc(generators::Vector{Pauli{N}}, angles, o::PauliSum{N
 
     # collect our results here...
     step_evo = Int64(nt/(3*(N-1)))
-    otoc = Vector{Float64}(undef, step_evo)
+    otoc = Vector{Float64}(undef, step_evo+1)
     temp_o = PauliSum(N)
-    time = 1
+    time = 1+1
     o_transformed = deepcopy(o)
     dicts = Vector(undef, nt)    
     sin_branch = PauliSum(N)
- 
+    
+    otoc[1] = real(expectation_value(o, ket))
     
     for t in 1:nt
 
@@ -112,18 +124,19 @@ function tree_evolution_otoc(generators::Vector{Pauli{N}}, angles, o::PauliSum{N
         end
         sum!(o_transformed, sin_branch) 
         clip!(o_transformed, thresh=thresh)
-        # println((n_ops[t]))
-        # println(o_transformed)
         dicts[t] = deepcopy(o_transformed)
-        println("Generator: ", t)
+
         if t%(3*(N-1)) == 0
-            println(time)
+            println("Time: ", time)
             os = o*o_transformed
             println("First otoc done")
             # display(os)
-            temp_o = os*os
+            # temp_o = os*os
             println("Second otoc done")
-            otoc[time] = real(expectation_value(temp_o, ket))
+            # otoc[time] = real(expectation_value(temp_o, ket))
+            otoc[time] = real(otoc_expectation_value(os, os, ket))
+            # otoc[time] = tr(adjoint(temp_o)*temp_o)
+
             time += 1
         end
 
