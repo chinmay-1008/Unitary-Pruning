@@ -38,13 +38,13 @@ function run(; N=10,threshold = 1e-3, dt=0.1, T=10)
     xlabel!("Time")
     ylabel!("OTOC")
     title!("N=$N; Jx = $x, Jy = $y, Jz = $z, thresh = $threshold; dt = $dt")
-    savefig("test/tree_otoc$N-$threshold-$dt-$T-new-abc-2.pdf")
+    savefig("test/tree_otoc$N-$threshold-$dt-$T.pdf")
  
     # writedlm("test/tree_evolN$N-$threshold.dat", evol)
     return
 end
 
-@time run(N = 5, threshold = 1e-3, dt = 0.1, T = 100)
+@time run(N = 15, threshold = 1e-3, dt = 0.1, T = 100)
 # a = Pauli(6)
 # display(a)
 # println(string(a))
