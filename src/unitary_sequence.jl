@@ -119,6 +119,31 @@ function tilted_ising(N, Jx, Jz)
     return H, hj
 end 
 
+# function central_spin(N, a, b, z, k)
+#     generators = Vector{Pauli{N}}([])
+#     parameters = Vector{Float64}([])
+
+#     for ki in 1:k
+#         for i in 2:N
+#             push!(generators, Pauli(N, Z = [1],X = [i]))
+#             push!(parameters, a)
+
+#             push!(generators, Pauli(N, Z = [1], Z = [i]))
+            
+#             push!(generators, Pauli(N, Z = [i]))
+#         end
+#     end
+# end
+
+function central_spin(N, a, b, w)
+    H = PauliSum(N)
+    for i in 2:N
+        H += a * Pauli(N, Z = [1], X = [i])
+        H += b * Pauli(N, Z = [1], Z = [i])
+        H += w * Pauli(N, Z = [i])
+    end
+end
+
 function local_folding(generators::Vector{Pauli{N}}, parameters, scaling_factor) where N
     # Adding U'U at rondom places in the generators
 
