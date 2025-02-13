@@ -138,12 +138,32 @@ end
 function central_spin(N, a, b, w)
     H = PauliSum(N)
     for i in 2:N
-        H += a * Pauli(N, Z = [1], X = [i])
-        H += b * Pauli(N, Z = [1], Z = [i])
+        H += a[i-1] * Pauli(N, Z = [1], X = [i])
+        H += b[i-1] * Pauli(N, Z = [1, i])
         H += w * Pauli(N, Z = [i])
     end
+
+    return H
 end
 
+function central_spin_gen(N, a, b, w, k)
+    generators = Vector{Pauli{N}}([])
+    parameters = Vector{Float64}([])
+
+    for ki in 1:k
+        for i in 2:N
+            push!(generators, Pauli(N, Z = [1], X = [i]))
+            push!(parameters,a[i-1])
+            
+            push!(generators, Pauli(N, Z = [1, i]))
+            push!(parameters, b[i-1])
+
+            push!(generators, Pauli(N, Z = [i]))
+            push!(parameters, w)
+        end
+    end
+    return generators, parameters
+end
 function local_folding(generators::Vector{Pauli{N}}, parameters, scaling_factor) where N
     # Adding U'U at rondom places in the generators
 
