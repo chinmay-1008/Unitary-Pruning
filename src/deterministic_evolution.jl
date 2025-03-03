@@ -1086,6 +1086,12 @@ function bfs_evolution_central(generators::Vector{Pauli{N}}, angles, o::PauliSum
     ham_ops = 0
     exp_time = Vector{Float64}([])
 
+    temp_state = o_transformed * ket
+    exp_l = dot_pdt(ket, temp_state)
+    display(temp_state)
+    println(abs(exp_l))
+    push!(exp_time, abs(exp_l))
+
     for t in 1:nt
         
         g = generators[t]
@@ -1123,12 +1129,13 @@ function bfs_evolution_central(generators::Vector{Pauli{N}}, angles, o::PauliSum
             exp_l = dot_pdt(ket, temp_state)
             # exp_l = 0
             # for (state, s_coeff) in ket
-            #     exp_l += (abs(s_coeff)^2) * expectation_value(o_transformed, state) 
+                # exp_l += (abs(s_coeff)^2) * expectation_value(o_transformed, state) 
             # end
             # exp_l = expectation_value(o_transformed, ket)
             # println("--------------------taking exp-------------------")
-            # println(exp_l)
             push!(exp_time, abs(exp_l))
+            # display(temp_state)
+            # println(abs(exp_l))
             dicts[Int(ham_ops/(3*(N-1)))] = deepcopy(o_transformed)
         end
 
@@ -1146,6 +1153,9 @@ function bfs_evolution_central(generators::Vector{Pauli{N}}, angles, o::PauliSum
         end
         # println(t, " ", ham_ops)
         # println("opes done: ", g)
+        # display(o_transformed)
+        # println("-----------------------------")
+
     end
 
 
@@ -1168,6 +1178,119 @@ function bfs_evolution_central(generators::Vector{Pauli{N}}, angles, o::PauliSum
         coeff_norm2+= abs(coeff)^2      # final list of operators
     end 
 
+    coeff_norm2 = sqrt(coeff_norm2)
+
+    return expval, n_ops, coeff_norm2, exp_time, dicts
+end
+
+function bfs_evolution_central_state(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket, dt, pi_pulse ; thresh=1e-3) where {N}
+
+    #
+    # for a single pauli Unitary, U = exp(-i θn Pn/2)
+    # U' O U = cos(θ) O + i sin(θ) OP
+    reverse!(generators)
+    reverse!(angles)
+    nt = length(angles)
+    length(angles) == nt || throw(DimensionMismatch)
+    angles *= (-dt)
+    
+    for j in pi_pulse
+        # println(angles[j])
+        angles[j] /= dt
+        # println(generators[j], " ", angles[j])
+        # println(sin(angles[j]))
+    end
+
+    vcos = cos.(angles)
+    vsin = sin.(angles)
+
+
+    # collect our results here...
+    expval = zero(ComplexF64)
+
+    o_transformed = PauliSum(N) + Pauli(N)
+ 
+    sin_branch = PauliSum(N)
+    d_nt = Int64(floor((nt-length(pi_pulse))/(3*(N-1))))
+    # println(d_nt)
+    dicts = Vector(undef, d_nt)    
+    n_ops = zeros(Int,nt)
+    ham_ops = 0
+    exp_time = Vector{Float64}([])
+
+    temp_state = o_transformed * ket
+
+    exp_state = o * temp_state
+    exp_l = dot_pdt(temp_state, exp_state)
+    display(temp_state)
+    println(abs(exp_l))
+    push!(exp_time, abs(exp_l))
+
+    for t in 1:nt
+        
+        g = generators[t]
+
+        sin_branch = PauliSum(N)
+        temp_norm2 = 0
+
+        for (oi,coeff) in o_transformed.ops
+            
+            abs(coeff) > thresh || continue
+
+
+            # if commute(oi, g.pauli) == false
+                
+                # cos branch
+            o_transformed[oi] = coeff * vcos[t]
+
+                # sin branch
+            oj = g * oi    # multiply the pauli's
+            sum!(sin_branch, oj * vsin[t] * coeff * (1im))
+    
+            # end
+            temp_norm2+=abs(coeff)^2
+        end
+        sum!(o_transformed, sin_branch) 
+        clip!(o_transformed, thresh=thresh)
+        n_ops[t] = length(o_transformed)
+        ham_ops +=1
+
+        if ham_ops % (3*(N-1)) == 0
+            # println(ham_ops)
+            # println("op: ", g, " t: ", t, " ham: ", ham_ops)
+            temp_state = o_transformed * ket
+            # display(temp_state)
+            # println("--------------------taking exp-------------------")
+
+            exp_state = o * temp_state
+            exp_l = dot_pdt(temp_state, exp_state)
+
+            push!(exp_time, abs(exp_l))
+            # println(abs(exp_l))
+            dicts[Int(ham_ops/(3*(N-1)))] = deepcopy(o_transformed)
+        end
+
+        if g == Pauli(N, X = [1])
+            println("-----------------------------")
+            println(g)
+            ham_ops -= 1
+            println(t, " ", ham_ops)
+            println("-----------------------------")
+        end
+
+    end
+
+    coeff_norm2 = 0
+
+    for (oi,coeff) in o_transformed.ops
+        # expval += coeff*expectation_value(oi, ket)
+        coeff_norm2+= abs(coeff)^2      # final list of operators
+    end 
+
+    temp_state = o_transformed * ket
+    exp_state = o * temp_state
+
+    expval = dot_pdt(temp_state, exp_state)
     coeff_norm2 = sqrt(coeff_norm2)
 
     return expval, n_ops, coeff_norm2, exp_time, dicts

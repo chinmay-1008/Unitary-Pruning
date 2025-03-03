@@ -14,10 +14,11 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
 
     new_state = SparseKetBasis(N)
 
+    # new_state[ket_0] = 1
     new_state[ket_0] = 1/sqrt(2)
     new_state[ket_1] = 1/sqrt(2)
-    
-    # display(new_state)
+    println("Initial State")
+    display(new_state)
 
     # o_1 = (1/sqrt(2))*(Pauli(N, X = [1]))
     # o_2 = (1/sqrt(2))*(Pauli(N, Y = [1])) 
@@ -25,24 +26,6 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
     
     # ev_state = o * new_state
     # display(ev_state)
-
-    # function dot_pdt(bra_state, ket_state)
-    #     val = 0
-    #     for (ket, coeff_ket) in ket_state
-    #         for (bra, coeff_bra) in bra_state
-    #             if ket.v == bra.v
-    #                 val += coeff_bra' * coeff_ket
-    #             end
-    #         end
-    #     end
-    #     return val
-    # end 
-    # a = dot_pdt(new_state, ev_state)
-    # println(a)
-    # println(expectation_value(o, new_state))
-
-    # return
-    # dt = 0.01
 
     # k = Int64(T/dt)
     # T = floor(Int64(k*dt))
@@ -61,52 +44,56 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
     println("Num of generators: ", nt, " Trotter Steps: ", k)
     ham_n = 3*(N-1)
 
-    # p_1 = Int64(floor(k/4))*ham_n + 1
+    p_1 = Int64(floor(k/4))*ham_n + 1
 
-    # println(ham_n, " ", p_1)
-    # insert!(generators, p_1, Pauli(N, X = [1]))
-    # insert!(parameters, p_1, π/2)
+    println(ham_n, " ", p_1)
+    insert!(generators, p_1, Pauli(N, X = [1]))
+    insert!(parameters, p_1, π/2)
 
-    # p_2 = (Int64(floor((3*k)/4)))*ham_n + 2
+    p_2 = (Int64(floor((3*k)/4)))*ham_n + 2
 
-    # println(ham_n, " ", p_2)
-    # insert!(generators, p_2, Pauli(N, X = [1]))
-    # insert!(parameters, p_2, π/2)
+    println(ham_n, " ", p_2)
+    insert!(generators, p_2, Pauli(N, X = [1]))
+    insert!(parameters, p_2, π/2)
 
-    # pi_pulse = [p_1, p_2]
-    pi_pulse = []
+    pi_pulse = [p_1, p_2]
+    # pi_pulse = []
 
     # println(generators)
     println("The observable: ")
     display(o)
     println("------------------------------------------------------")
     println("Beginning the evolution: ")
-    ei, nops, norm, ei_time, dicts = UnitaryPruning.bfs_evolution_central(generators, parameters, o, new_state, dt, pi_pulse, thresh = thresh)
-    @printf(" e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", real(ei), imag(ei), maximum(nops), norm, thresh)
- 
-    println("Expectation Value: ", ei)
+    # ei, nops, norm, ei_time, dicts = UnitaryPruning.bfs_evolution_central(generators, parameters, o, new_state, dt, pi_pulse, thresh = thresh)
+    ei, nops, norm, ei_time, dicts = UnitaryPruning.bfs_evolution_central_state(generators, parameters, o, new_state, dt, pi_pulse, thresh = thresh)
 
-    time_step = [i*dt for i in 1:k]
-    plot(time_step, ei_time)
+    @printf(" e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", real(ei), imag(ei), maximum(nops), norm, thresh)
+
+    println("Expectation Value: ", ei)
+    # return
+
+    time_step = [i*dt for i in 0:k]
+    exp_vals = ei_time
+    plot(time_step, exp_vals)
     xlabel!("Time")
     ylabel!("Abs(Exp Val)")
 
 
     if length(pi_pulse) == 0
         title!("N=$N, k=$k, dt=$dt; no π-pulse")
-        savefig("test/temp-central_$N-2pi-$k-$T-skb-nopi.pdf")
+        savefig("test/temp-central_$N-$k-$T-state-ones.pdf")
 
     else 
         title!("N=$N, k=$k, dt=$dt; π-pulse at t = T/4, 3T/4")
         t1 = T/4
         t2 = 3T/4
-        ylims = [minimum(ei_time), maximum(ei_time)]  # Adjust y-limits for visibility
+        ylims = [minimum(exp_vals), maximum(exp_vals)]  # Adjust y-limits for visibility
     
         # Overlay the vertical dashed red lines
         plot!([t1, t1], ylims, color=:red, linestyle=:dash, linewidth=1, label="T/4")
         plot!([t2, t2], ylims, color=:red, linestyle=:dash, linewidth=1, label="3T/4")
     
-        savefig("test/temp-central_$N-2pi-$k-$T-skb-pi.pdf")
+        savefig("test/temp-central_$N-2pi-$k-$T-state-ones.pdf")
     end
 
 
@@ -150,10 +137,18 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
     return
 end 
 
-a = [0.176538, 0.174746, 0.169478, 0.161048, 0.149946]
-b = [0.669628, 0.66283, 0.642846, 0.610871, 0.568759]
-w = 2*π*3.98
+a = [-0.176538, -0.174746, -0.169478, -0.161048, -0.149946]
+b = [-0.669628, -0.66283, -0.642846, -0.610871, -0.568759]
+w = -2*π*3.98
+# a = [0.176538, 0.174746, 0.169478, 0.161048, 0.149946]
+# b = [0.669628, 0.66283, 0.642846, 0.610871, 0.568759]
+# w = 2*π*3.98
+# run(N = 6, a = a, b = b, w = w, k = 1000, T = 2, thresh = -1)
+# 
+run(N = 6, a = [i/i for i in 1:6], b = [i/i for i in 1:6], w = 1, k = 500, T = 5, thresh = -1)
+# c_01 = -0.0228317+0.054002im
+# c_11 = -0.193594-0.0586302im
+# c_00 = -0.2664+0.652375im
+# c_10 = -0.499418+0.457893im
 
-# run(N = 6, a = a, b = b, w = w, k = 500, T = 10, thresh = -1)
-
-run(N = 2, a = [1], b = [1], w = 1, k = 5, T = 1, thresh = -1)
+# println(2*abs(c_00*c_11 - c_01*c_10))
