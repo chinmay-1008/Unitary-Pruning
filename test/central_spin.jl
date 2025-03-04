@@ -124,7 +124,7 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
     # end
 
     # plot(time_step, one_tangling)
-    # xlabel!("Time")
+    # xlabel!("Time") 
     # ylabel!("One-tangling power")
     # title!("N=$N, k=$k, dt=$dt; π-pulse at t=T/4, 3T/4")
 
@@ -137,15 +137,13 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
     return
 end 
 
-a = [-0.176538, -0.174746, -0.169478, -0.161048, -0.149946]
-b = [-0.669628, -0.66283, -0.642846, -0.610871, -0.568759]
-w = -2*π*3.98
+
 # a = [0.176538, 0.174746, 0.169478, 0.161048, 0.149946]
 # b = [0.669628, 0.66283, 0.642846, 0.610871, 0.568759]
 # w = 2*π*3.98
-# run(N = 6, a = a, b = b, w = w, k = 1000, T = 2, thresh = -1)
+# run(N = 6, a = a, b = b, w = w, k = 1000, T = 4, thresh = -1)
 # 
-run(N = 6, a = [i/i for i in 1:6], b = [i/i for i in 1:6], w = 1, k = 500, T = 5, thresh = -1)
+run(N = 6, a = [i/i for i in 1:6], b = [i/i for i in 1:6], w = 1, k = 500, T = 20, thresh = -1)
 # c_01 = -0.0228317+0.054002im
 # c_11 = -0.193594-0.0586302im
 # c_00 = -0.2664+0.652375im

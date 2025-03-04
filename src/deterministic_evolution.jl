@@ -1110,7 +1110,7 @@ function bfs_evolution_central(generators::Vector{Pauli{N}}, angles, o::PauliSum
                 o_transformed[oi] = coeff * vcos[t]
 
                 # sin branch
-                oj = g * oi    # multiply the pauli's
+                oj = oi * g    # multiply the pauli's
                 sum!(sin_branch, oj * vsin[t] * coeff * 1im)
     
             end
@@ -1192,7 +1192,7 @@ function bfs_evolution_central_state(generators::Vector{Pauli{N}}, angles, o::Pa
     reverse!(angles)
     nt = length(angles)
     length(angles) == nt || throw(DimensionMismatch)
-    angles *= (-dt)
+    angles *= (dt)
     
     for j in pi_pulse
         # println(angles[j])
@@ -1244,8 +1244,8 @@ function bfs_evolution_central_state(generators::Vector{Pauli{N}}, angles, o::Pa
             o_transformed[oi] = coeff * vcos[t]
 
                 # sin branch
-            oj = g * oi    # multiply the pauli's
-            sum!(sin_branch, oj * vsin[t] * coeff * (1im))
+            oj = oi * g    # multiply the pauli's
+            sum!(sin_branch, oj * vsin[t] * coeff * (-1im))
     
             # end
             temp_norm2+=abs(coeff)^2
