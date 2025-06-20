@@ -1,6 +1,7 @@
 using Random, Distributions
 using BenchmarkTools
 using LinearAlgebra
+using PauliOperators
 """
     deterministic_pauli_rotations(generators::Vector{P}, angles, o::P, ket; nsamples=1000) where {N, P<:Pauli}
 
@@ -143,6 +144,110 @@ function bfs_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket
     coeff_norm2 = sqrt(coeff_norm2)
     # println(coeff_norm2)
     # println("dfhvskjdvjksdfsdjkfsjhfkshfleshfkehfkl")
+
+    return expval, n_ops, coeff_norm2
+end
+
+function weight(ps::FixedPhasePauli{N}) where {N}
+    x = ps.x
+    z = ps.z
+    return count_ones(x | z)
+end
+
+function majorana_weight(Pb::Union{Pauli{N}, FixedPhasePauli{N}}) where N
+
+    w = 0
+    control = true
+    # tmp = Pb.z & ~Pb.x  # Bitwise AND with bitwise NOT
+    Ibits = ~(Pb.z|Pb.x)
+    Zbits = Pb.z & ~Pb.x
+    for i in reverse(1:N)  # Iterate from N down to 1
+        xbit = (Pb.x >> (i - 1)) & 1 != 0
+        Zbit = (Zbits >> (i - 1)) & 1 != 0
+        Ibit = (Ibits >> (i - 1)) & 1 != 0
+        #println("i=$i, xbit=$xbit, Zbit=$Zbit, Ibit=$Ibit, control=$control, w=$w")
+        if Zbit && control || Ibit && !control
+            w += 2
+        elseif xbit
+            control = !control
+            w += 1
+        end
+    end
+    return w
+end
+
+function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0) where {N}
+    filter!(p->(weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
+end
+
+function weightclip!(ps::PauliSum{N}; lc = 0) where {N}
+    filter!(p-> weight(p.first) <= lc , ps.ops)
+end
+
+function majorana_clip!(ps::PauliSum{N}; lc = 0) where {N}
+    filter!(p-> majorana_weight(p.first) <= lc , ps.ops)
+end
+
+function bfs_evolution_heisenberg(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, w = 2) where {N}
+
+    #
+    # for a single pauli Unitary, U = exp(-i θn Pn/2)
+    # U' O U = cos(θ) O + i sin(θ) OP
+    nt = length(angles)
+    length(angles) == nt || throw(DimensionMismatch)
+    vcos = cos.(angles)
+    vsin = sin.(angles)
+
+    # collect our results here...
+    expval = zero(ComplexF64)
+
+
+    o_transformed = deepcopy(o)
+    sin_branch = PauliSum(N)
+ 
+    n_ops = zeros(Int,nt)
+    
+    for t in 1:nt
+
+        g = generators[t]
+
+        sin_branch = PauliSum(N)
+
+        for (oi,coeff) in o_transformed.ops
+           
+            abs(coeff) > thresh || continue
+
+            if commute(oi, g.pauli) == false
+                
+                # cos branch
+                o_transformed[oi] = coeff * vcos[t]
+
+                # sin branch
+                oj = g * oi    # multiply the pauli's
+                sum!(sin_branch, oj * vsin[t] * coeff * 1im)
+  
+            end
+        end
+        sum!(o_transformed, sin_branch) 
+        # println("Initial ", length(o_transformed))
+        # display(o_transformed)
+        # clip!(o_transformed, thresh=thresh)
+        # myclip!(o_transformed, thresh=thresh, lc = w)
+        # weightclip!(o_tran    sformed, lc = w)
+        majorana_clip!(o_transformed, lc = w)
+
+        # println("Clipped ", length(o_transformed))
+        # display(o_transformed)
+        n_ops[t] = length(o_transformed)
+    end
+
+    coeff_norm2 = 0
+
+    for (oi,coeff) in o_transformed.ops
+        expval += coeff*expectation_value(oi, ket)
+        coeff_norm2+= abs(coeff)^2      # final list of operators
+    end
+    coeff_norm2 = sqrt(coeff_norm2)
 
     return expval, n_ops, coeff_norm2
 end
@@ -784,15 +889,6 @@ function bfs_angle_error(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, k
     return expval, n_ops, coeff_norm2
 end
 
-function weight(ps::FixedPhasePauli{N}) where {N}
-    x = ps.x
-    z = ps.z
-    return count_ones(x | z)
-end
-
-function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0) where {N}
-    filter!(p->(abs(p.second) > thresh) | (weight(p.first) < lc), ps.ops)
-end
 
 
 function bfs_evolution_diff(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, γ = 0, lc = 0) where {N}
@@ -1089,11 +1185,11 @@ function bfs_evolution_central(generators::Vector{Pauli{N}}, angles, o::PauliSum
     temp_state = o_transformed * ket
     exp_l = dot_pdt(ket, temp_state)
     display(temp_state)
-    println(abs(exp_l))
+    println("Expectation Valuel: ", exp_l)
     push!(exp_time, abs(exp_l))
 
     for t in 1:nt
-        
+
         g = generators[t]
 
         sin_branch = PauliSum(N)
@@ -1177,7 +1273,13 @@ function bfs_evolution_central(generators::Vector{Pauli{N}}, angles, o::PauliSum
     #     expval += coeff*expectation_value(oi, ket)
         coeff_norm2+= abs(coeff)^2      # final list of operators
     end 
+    temp_state = o_transformed * ket
+    # exp_state = o * temp_state
+    # display(temp_state)
+    # println("Exp: ", dot_pdt(ket, temp_state))
+    # println("Purity S+: ", abs(dot_pdt(temp_state, temp_state)))
 
+    expval = dot_pdt(ket, temp_state)
     coeff_norm2 = sqrt(coeff_norm2)
 
     return expval, n_ops, coeff_norm2, exp_time, dicts
@@ -1188,8 +1290,8 @@ function bfs_evolution_central_state(generators::Vector{Pauli{N}}, angles, o::Pa
     #
     # for a single pauli Unitary, U = exp(-i θn Pn/2)
     # U' O U = cos(θ) O + i sin(θ) OP
-    reverse!(generators)
-    reverse!(angles)
+    # reverse!(generators)
+    # reverse!(angles)
     nt = length(angles)
     length(angles) == nt || throw(DimensionMismatch)
     angles *= (dt)
@@ -1222,8 +1324,8 @@ function bfs_evolution_central_state(generators::Vector{Pauli{N}}, angles, o::Pa
 
     exp_state = o * temp_state
     exp_l = dot_pdt(temp_state, exp_state)
-    display(temp_state)
-    println(abs(exp_l))
+    display(exp_state)
+    println("Exp Val: ", abs(exp_l))
     push!(exp_time, abs(exp_l))
 
     for t in 1:nt
@@ -1289,6 +1391,9 @@ function bfs_evolution_central_state(generators::Vector{Pauli{N}}, angles, o::Pa
 
     temp_state = o_transformed * ket
     exp_state = o * temp_state
+    display(temp_state)
+    println("Purity: ", abs(dot_pdt(temp_state, temp_state))^2)
+    println("Purity S+: ", abs(dot_pdt(exp_state, exp_state)))
 
     expval = dot_pdt(temp_state, exp_state)
     coeff_norm2 = sqrt(coeff_norm2)

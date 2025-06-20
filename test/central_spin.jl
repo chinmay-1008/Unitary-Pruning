@@ -33,8 +33,10 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
     println("dt: ", dt)
     generators, parameters = UnitaryPruning.central_spin_gen(N, a, b, w, k)
 
-    o_1 = (1/sqrt(2))*(Pauli(N, X = [1]))
-    o_2 = (1/sqrt(2))*1im*(Pauli(N, Y = [1])) 
+    # o_1 = (1/sqrt(2))*(Pauli(N, X = [1]))
+    # o_2 = (1/sqrt(2))*1im*(Pauli(N, Y = [1]))
+    o_1 = 0.5*(Pauli(N, X = [1]))
+    o_2 = 0.5*1im*(Pauli(N, Y = [1]))  
     o = o_1 + o_2
 
     # o = PauliSum(N) + Pauli(N, Z = [1])
@@ -64,8 +66,8 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
     display(o)
     println("------------------------------------------------------")
     println("Beginning the evolution: ")
-    # ei, nops, norm, ei_time, dicts = UnitaryPruning.bfs_evolution_central(generators, parameters, o, new_state, dt, pi_pulse, thresh = thresh)
-    ei, nops, norm, ei_time, dicts = UnitaryPruning.bfs_evolution_central_state(generators, parameters, o, new_state, dt, pi_pulse, thresh = thresh)
+    ei, nops, norm, ei_time, dicts = UnitaryPruning.bfs_evolution_central(generators, parameters, o, new_state, dt, pi_pulse, thresh = thresh)
+    # ei, nops, norm, ei_time, dicts = UnitaryPruning.bfs_evolution_central_state(generators, parameters, o, new_state, dt, pi_pulse, thresh = thresh)
 
     @printf(" e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", real(ei), imag(ei), maximum(nops), norm, thresh)
 
@@ -74,14 +76,14 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
 
     time_step = [i*dt for i in 0:k]
     exp_vals = ei_time
-    plot(time_step, exp_vals)
+    plot(time_step, exp_vals, dpi = 500)
     xlabel!("Time")
     ylabel!("Abs(Exp Val)")
 
 
     if length(pi_pulse) == 0
         title!("N=$N, k=$k, dt=$dt; no π-pulse")
-        savefig("test/temp-central_$N-$k-$T-state-ones.pdf")
+        savefig("test/temp-central_$N-$k-$T-ops-abw.png")
 
     else 
         title!("N=$N, k=$k, dt=$dt; π-pulse at t = T/4, 3T/4")
@@ -93,23 +95,23 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
         plot!([t1, t1], ylims, color=:red, linestyle=:dash, linewidth=1, label="T/4")
         plot!([t2, t2], ylims, color=:red, linestyle=:dash, linewidth=1, label="3T/4")
     
-        savefig("test/temp-central_$N-2pi-$k-$T-state-ones.pdf")
+        savefig("test/temp-central_$N-2pi-$k-$T-ops-abw.png")
     end
 
 
 
-    # evol = []
-    # for data in dicts
-    #     temp_pauli = []
-    #     temp_coeff = []
-    #     for (oi, coeff) in data.ops
-    #         push!(temp_pauli, string(oi))
-    #         push!(temp_coeff, coeff)
-    #     end
-    #     push!(evol, temp_pauli)
-    #     push!(evol, temp_coeff)
-    # end
-    # writedlm("test/central_evolN$N-$k-$T-skb-nopi.dat", evol)
+    evol = []
+    for data in dicts
+        temp_pauli = []
+        temp_coeff = []
+        for (oi, coeff) in data.ops
+            push!(temp_pauli, string(oi))
+            push!(temp_coeff, coeff)
+        end
+        push!(evol, temp_pauli)
+        push!(evol, temp_coeff)
+    end
+    writedlm("test/central_evolN$N-$k-$T-2pi-ops-abw.dat", evol)
     # println(dicts)
     # savefig("test/central_$N-2pi-$k-$T-nuc6.pdf")
     # display(ei_time)
@@ -138,15 +140,16 @@ function run(; N = 6, a = 1, b = 1, w = 1, k = 10, T = 1, thresh = 0)
 end 
 
 
-# a = [0.176538, 0.174746, 0.169478, 0.161048, 0.149946]
-# b = [0.669628, 0.66283, 0.642846, 0.610871, 0.568759]
-# w = 2*π*3.98
-# run(N = 6, a = a, b = b, w = w, k = 1000, T = 4, thresh = -1)
-# 
-run(N = 6, a = [i/i for i in 1:6], b = [i/i for i in 1:6], w = 1, k = 500, T = 20, thresh = -1)
+a = [0.176538, 0.174746, 0.169478, 0.161048, 0.149946]
+b = [0.669628, 0.66283, 0.642846, 0.610871, 0.568759]
+w = 2*π*3.98
+run(N = 6, a = a, b = b, w = w, k = 1000, T = 20, thresh = -1)
+
+# run(N = 6, a = [i/i for i in 1:6], b = [i/i for i in 1:6], w = 1, k = 1000, T = 20, thresh = -1)
 # c_01 = -0.0228317+0.054002im
 # c_11 = -0.193594-0.0586302im
 # c_00 = -0.2664+0.652375im
 # c_10 = -0.499418+0.457893im
 
 # println(2*abs(c_00*c_11 - c_01*c_10))
+# 

@@ -1,0 +1,77 @@
+[
+  {
+    "param": "theta_0",
+    "terms": [
+      {
+        "pauli": "IIXY",
+        "real": 0.5,
+        "imag": 0.0
+      },
+      {
+        "pauli": "IIYX",
+        "real": -0.5,
+        "imag": 0.0
+      }
+    ]
+  },
+  {
+    "param": "theta_1",
+    "terms": [
+      {
+        "pauli": "XYII",
+        "real": 0.5,
+        "imag": 0.0
+      },
+      {
+        "pauli": "YXII",
+        "real": -0.5,
+        "imag": 0.0
+      }
+    ]
+  },
+  {
+    "param": "theta_2",
+    "terms": [
+      {
+        "pauli": "YYXY",
+        "real": -0.125,
+        "imag": 0.0
+      },
+      {
+        "pauli": "XYYY",
+        "real": -0.125,
+        "imag": 0.0
+      },
+      {
+        "pauli": "XXXY",
+        "real": -0.125,
+        "imag": 0.0
+      },
+      {
+        "pauli": "YXYY",
+        "real": 0.125,
+        "imag": 0.0
+      },
+      {
+        "pauli": "XYXX",
+        "real": -0.125,
+        "imag": 0.0
+      },
+      {
+        "pauli": "YYYX",
+        "real": 0.125,
+        "imag": 0.0
+      },
+      {
+        "pauli": "YXXX",
+        "real": 0.125,
+        "imag": 0.0
+      },
+      {
+        "pauli": "XXYX",
+        "real": 0.125,
+        "imag": 0.0
+      }
+    ]
+  }
+]

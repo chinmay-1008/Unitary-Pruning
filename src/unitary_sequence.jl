@@ -103,6 +103,35 @@ function heisenberg(o::Pauli{N}; Jx, Jy, Jz, k) where N
     return generators, parameters
 end
 
+function heisenberg_2D(o::Pauli{N}; Jx, Jy, Jz, k) where N 
+    L = Int(sqrt(N))
+    generators = Vector{Pauli{N}}()
+    parameters = Vector{Float64}()
+
+    index(i, j) = (mod1(i, L) - 1) * L + mod1(j, L)
+
+    for ki in 1:k
+        for i in 1:L, j in 1:L
+            a = index(i, j)
+
+            # Right neighbor (periodic in j)
+            b = index(i, j + 1)
+            push!(generators, Pauli(N, X=[a, b])); push!(parameters, Jx)
+            push!(generators, Pauli(N, Y=[a, b])); push!(parameters, Jy)
+            push!(generators, Pauli(N, Z=[a, b])); push!(parameters, Jz)
+
+            # Down neighbor (periodic in i)
+            b = index(i + 1, j)
+            push!(generators, Pauli(N, X=[a, b])); push!(parameters, Jx)
+            push!(generators, Pauli(N, Y=[a, b])); push!(parameters, Jy)
+            push!(generators, Pauli(N, Z=[a, b])); push!(parameters, Jz)
+        end
+    end
+
+    return generators, parameters
+end
+
+
 
 function tilted_ising(N, Jx, Jz)
     H = PauliSum(N)
