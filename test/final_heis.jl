@@ -13,11 +13,12 @@ end
 function run(; N=10, k=5, thresh=1e-3, w = 2)
    
     ket = KetBitString(N, 0) 
-    o = Pauli(N, Z=[5])
+    o = Pauli(N, Z=[N])
 
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
-    generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 0.8, U = 4, k=k)
 
     ei , nops, c_norm2 = UnitaryPruning.bfs_evolution_heisenberg(generators, parameters, PauliSum(o), ket, thresh=thresh, w = w)
     
@@ -34,13 +35,14 @@ function run(; N=10, k=5, thresh=1e-3, w = 2)
 end
 
 function run_weights()
-    N = 3
+    N = 4
     k = 10
-    N *= N
-    o = Pauli(N, Z=[5])
+    N = 2*N
+    o = Pauli(N, Z=[N])
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
-    generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 0.8, U = 4, k=k)
 
 
     U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
@@ -66,19 +68,23 @@ function run_weights()
         marker = :circle,
         legend = :topright,
         grid = true)
-    savefig("test/fin_heis2d_weights_N$N-k$k-majorana_2.pdf")
+    savefig("test/fermi_hub_1d_weights_N$N-k$k-majorana_2.pdf")
 
 end
 
 run_weights()
-# N = 3
-# N = N^2
+# N = 2
+# N = 2*N
 # k = 1
 # o = Pauli(N, Z=[1])
 
 # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
 # # display(generators)
+# generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 0.1, U = 1, k = 1)
 
+# display(hammy)
+# p = UnitaryPruning.jw_transform(o, 1)
+# display(p' * p)
 # L = Int(sqrt(N))
 # index(i, j) = (mod1(i, L) - 1) * L + mod1(j, L)
 

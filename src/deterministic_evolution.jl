@@ -233,7 +233,7 @@ function bfs_evolution_heisenberg(generators::Vector{Pauli{N}}, angles, o::Pauli
         # display(o_transformed)
         # clip!(o_transformed, thresh=thresh)
         # myclip!(o_transformed, thresh=thresh, lc = w)
-        # weightclip!(o_tran    sformed, lc = w)
+        # weightclip!(o_transformed, lc = w)
         majorana_clip!(o_transformed, lc = w)
 
         # println("Clipped ", length(o_transformed))
