@@ -176,8 +176,12 @@ function majorana_weight(Pb::Union{Pauli{N}, FixedPhasePauli{N}}) where N
     return w
 end
 
-function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0) where {N}
-    filter!(p->(weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
+function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0, w_type = 0) where {N}
+    if w_type == 0 
+        filter!(p->(weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
+    else
+        filter!(p->(majorana_weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
+    end     
 end
 
 function weightclip!(ps::PauliSum{N}; lc = 0) where {N}
@@ -188,7 +192,8 @@ function majorana_clip!(ps::PauliSum{N}; lc = 0) where {N}
     filter!(p-> majorana_weight(p.first) <= lc , ps.ops)
 end
 
-function bfs_evolution_heisenberg(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, w = 2) where {N}
+# w_type is the type of clipping, 0 is Pauli weight clipping and 1 is majorana weight clipping
+function bfs_evolution_weight(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, w_type = 0, w = 2) where {N}
 
     #
     # for a single pauli Unitary, U = exp(-i θn Pn/2)
@@ -232,9 +237,16 @@ function bfs_evolution_heisenberg(generators::Vector{Pauli{N}}, angles, o::Pauli
         # println("Initial ", length(o_transformed))
         # display(o_transformed)
         # clip!(o_transformed, thresh=thresh)
-        # myclip!(o_transformed, thresh=thresh, lc = w)
-        # weightclip!(o_transformed, lc = w)
-        majorana_clip!(o_transformed, lc = w)
+        myclip!(o_transformed, thresh=thresh, lc = w, w_type = w_type)
+        # if w_type == 0
+
+        #     weightclip!(o_transformed, lc = w)
+
+        # elseif w_type == 1 
+
+        #     majorana_clip!(o_transformed, lc = w)
+
+        # end
 
         # println("Clipped ", length(o_transformed))
         # display(o_transformed)

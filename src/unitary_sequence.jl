@@ -29,6 +29,43 @@ function get_unitary_sequence_1D(o::Pauli{N}; α=.01, k=10) where N
     return generators, parameters
 end
 
+function kicked_ising_2D(L::Int; α = 0.01, k = 10)
+    N = L * L  # Total number of spins
+    generators = Vector{Pauli{N}}([])
+    parameters = Vector{Float64}([])
+
+    # Map 2D coordinates to 1D index
+    index(i, j) = ((i - 1) % L) * L + ((j - 1) % L) + 1
+
+    for step in 1:k
+        ## ZZ layer 
+        for i in 1:L, j in 1:L
+            # Horizontal (right neighbor)
+            ni = index(i, j)
+            nj = index(i, j + 1)
+            push!(generators, Pauli(N, Z=[ni, nj]))
+            push!(parameters, π / 2)
+
+            # Vertical (bottom neighbor)
+            ni = index(i, j)
+            nj = index(i + 1, j)
+            push!(generators, Pauli(N, Z=[ni, nj]))
+            push!(parameters, π / 2)
+        end
+
+        ## X layer 
+        for i in 1:N
+            pi = Pauli(N, X=[i])
+            pi = Pauli{N}((pi.θ + 2) % 4, pi.pauli)  # handles -X
+            push!(generators, pi)
+            push!(parameters, α)
+        end
+    end
+
+    return generators, parameters
+end
+
+
 
 function get_unitary_sequence_2D(o::Pauli{N}; α=.01, k=10) where N
 
@@ -83,6 +120,31 @@ function build_time_evolution_matrix(generators::Vector{Pauli{N}}, angles::Vecto
     end
 
     return U 
+end
+
+function build_time_evolution_matrix_fast(generators::Vector{Pauli{N}}, angles::Vector{<:Real}) where N
+    nt = length(generators)
+    length(angles) == nt || throw(DimensionMismatch())
+
+    # Start with identity matrix of size 2^N × 2^N
+    U = Matrix{ComplexF64}(I, 2^N, 2^N)
+    W = Matrix{ComplexF64}(undef, 2^N, 2^N)  # workspace to avoid allocs
+
+    for t in 1:nt
+        α = angles[t]
+        Pmat = Matrix(generators[t])  # convert Pauli to matrix
+
+        # Use in-place multiplication: W = U * P
+        mul!(W, U, Pmat)
+
+        # Update U in-place: U = cos(α/2)*U - i*sin(α/2)*W
+        c, s = cos(α / 2), sin(α / 2)
+        @inbounds @simd for i in eachindex(U)
+            U[i] = c * U[i] - 1im * s * W[i]
+        end
+    end
+
+    return U
 end
 
 function heisenberg(o::Pauli{N}; Jx, Jy, Jz, k) where N 
@@ -152,7 +214,7 @@ function fermi_hubbard_1D(o::Pauli{N}; t, U, k) where N
 
     for ki in 1:k
         for j in 1:Nsites - 1
-            println("site: ", j)
+            # println("site: ", j)
 
             # α-spin c{i, α}†c{j, α} + h.c.
             i_a = jw_transform(o, up(j))
@@ -191,7 +253,7 @@ function fermi_hubbard_1D(o::Pauli{N}; t, U, k) where N
             push!(parameters, U*coeff)
         end
     end
-    
+
     return generators, parameters
 end 
 
