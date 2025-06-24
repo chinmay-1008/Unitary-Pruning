@@ -234,8 +234,6 @@ function bfs_evolution_weight(generators::Vector{Pauli{N}}, angles, o::PauliSum{
             end
         end
         sum!(o_transformed, sin_branch) 
-        # println("Initial ", length(o_transformed))
-        # display(o_transformed)
         # clip!(o_transformed, thresh=thresh)
         myclip!(o_transformed, thresh=thresh, lc = w, w_type = w_type)
         # if w_type == 0
@@ -248,8 +246,6 @@ function bfs_evolution_weight(generators::Vector{Pauli{N}}, angles, o::PauliSum{
 
         # end
 
-        # println("Clipped ", length(o_transformed))
-        # display(o_transformed)
         n_ops[t] = length(o_transformed)
     end
 
