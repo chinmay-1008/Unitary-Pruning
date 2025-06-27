@@ -265,12 +265,15 @@ function fermi_hubbard_2D(o::Pauli{N}; t, U, k) where N
     generators = Vector{Pauli{N}}()
     parameters = Vector{Float64}()
     t_term = PauliSum(N)
+    u_term = PauliSum(N)
 
     up(j) = 2*j - 1  
     dn(j) = 2*j
     linear_index(x, y) = (x-1)*L + y
     
     for ki in 1:k
+        t_term = PauliSum(N)
+
         for x in 1:L
             for y in 1:L
                 j = linear_index(x, y)
@@ -333,7 +336,7 @@ function fermi_hubbard_2D(o::Pauli{N}; t, U, k) where N
             push!(parameters, U*coeff)
         end
     end
-    return generators, parameters
+    return generators, parameters, -t*t_term + U*u_term
 
 end
 

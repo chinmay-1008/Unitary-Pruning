@@ -18,8 +18,8 @@ function run(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
-    generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1, U = 6, k=k)
-    # generators, parameters = UnitaryPruning.fermi_hubbard_2D(o, t = 1 , U = 6, k=k)
+    # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1, U = 6, k=k)
+    generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1, U = 12, k=k)
 
     ei , nops, c_norm2 = UnitaryPruning.bfs_evolution_weight(generators, parameters, PauliSum(o), ket, thresh=thresh, w_type = w_type, w = w)
     
@@ -43,93 +43,93 @@ function run(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     return real(ei)
 end
 
-function run_weights()
-    L = 5
 
-    k = 1
-    N = 2 * L 
+# Here need to change the t, U and o manually in the run_weight() and run() function.
+function run_weights()
+    L = 2
+      
+    N = 2 * L * L
     o = Pauli(N, Z=[1])
     thresh = -1
-    # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
-    # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
-    # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
-    generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1 , U = 6, k=k)
-    # generators, parameters = UnitaryPruning.fermi_hubbard_2D(o, t = 1 , U = 6, k=k)
+    for k in [1, 2, 3, 4, 5, 10]
+        println("k: ", k)
+        # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+        # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
+        # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+        # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1 , U = 6, k=k)
+        generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1 , U = 12, k=k)
 
 
-    U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
-    o_mat = Matrix(o)
-    m = diag(U'*o_mat*U)
-    # m = [0]
-    println("Exact Expectaition Value: ", m[1])
+        U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
+        o_mat = Matrix(o)
+        m = diag(U'*o_mat*U)
+        # m = [0]
+        println("Exact Expectaition Value: ", m[1])
 
-    weights = [i for i in 1:2*N]
+        weights = [i for i in 1:N]
 
-    w_type = 0
-    p_errors = []
+        w_type = 0
+        p_errors = []
 
-    for i in weights
-        println("Weight Threshold: ", i)
-        e_v = run(N = N, k = k, thresh = thresh, w_type = w_type, w = i)
-        push!(p_errors, abs(real(m[1]) - real(e_v)))
-        # push!(p_errors, real(e_v))
+        for i in weights
+            println("Weight Threshold: ", i)
+            e_v = run(N = N, k = k, thresh = thresh, w_type = w_type, w = i)
+            push!(p_errors, abs(real(m[1]) - real(e_v)))
+            # push!(p_errors, real(e_v))
 
+        end
+        display(p_errors)
+
+        w_type = 1
+        m_errors = []
+
+        for i in weights
+            println("Weight Threshold: ", i)
+            e_v = run(N = N, k = k, thresh = thresh, w_type = w_type, w = i)
+            push!(m_errors, abs(real(m[1]) - real(e_v)))
+            # push!(m_errors, real(e_v))
+
+        end
+
+        display(m_errors)
+
+        plot(weights, [p_errors, m_errors],
+            label = ["Pauli" "Majorana"],
+            xlabel = "Weight Cutoff",
+            ylabel = "Expectation Value Error",
+            title = "L = $L, N = $N, k=$k",
+            lw = 2,
+            marker = :circle,
+            legend = :topright,
+            grid = true,
+            dpi = 150)
+
+        savefig("test/temp_hubbard_2d_weights_L$L-k$k.png")
     end
-    display(p_errors)
-    # type = ""
-    # if w_type == 0
-    #     type = "Pauli"
-    # elseif w_type == 1
-    #     type = "Majorana"
-    # end
+end
 
-    w_type = 1
-    m_errors = []
+function temp_run()
+    N = 2
+    N = 2*N*N
+    k = 1
+    o = Pauli(N, Z=[1])
+    t = 1
+    U = 12
 
-    for i in weights
-        println("Weight Threshold: ", i)
-        e_v = run(N = N, k = k, thresh = thresh, w_type = w_type, w = i)
-        push!(m_errors, abs(real(m[1]) - real(e_v)))
-        # push!(m_errors, real(e_v))
+    generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = t, U = U, k = 1)
+    e, v = eigen(Matrix(hammy))
 
+    filename = "test/eigenspectrum_t$t-U$U.txt"
+
+    open(filename, "w") do f
+        for item in e
+            println(f, item)
+        end
     end
-    # display(errors)
-    # type = ""
-    # if w_type == 0
-    #     type = "Pauli"
-    # elseif w_type == 1
-    #     type = "Majorana"
-    # end
 
-    plot(weights, [p_errors, m_errors],
-        label = ["Pauli" "Majorana"],
-        xlabel = "Weight Cutoff",
-        ylabel = "Expectation Value Error",
-        title = "L = $L, N = $N, k=$k",
-        lw = 2,
-        marker = :circle,
-        legend = :topright,
-        grid = true)
-
-    savefig("test/hubbard_1d_weights_L$L-k$k.pdf")
+    return
 
 end
 
-run_weights()
-# @time run(N = 10, k = 10, thresh = -1, w_type = 0, w=8)
-# N = 8
-# N = 2*N
-# k = 1
-# o = Pauli(N, Z=[1])
-
-# generators, parameters = UnitaryPruning.fer(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
-# # display(generators)
-# generators, parameters = UnitaryPruning.fermi_hubbard_2D(o, t = 0.1, U = 1, k = 1)
-# println(generators)
-# display(hammy)
-# p = UnitaryPruning.jw_transform(o, 1)
-# display(p' * p)
-# L = Int(sqrt(N))
-# index(i, j) = (mod1(i, L) - 1) * L + mod1(j, L)
-
-
+# run_weights()
+temp_run()    
