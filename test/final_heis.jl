@@ -46,65 +46,69 @@ end
 
 # Here need to change the t, U and o manually in the run_weight() and run() function.
 function run_weights()
-    L = 2
+    L = 3
       
     N = 2 * L * L
     o = Pauli(N, Z=[1])
-    thresh = -1
-    for k in [1, 2, 3, 4, 5, 10]
+    set_k = [1, 2, 3, 4, 5, 10]
+    new_set_k = [2, 4, 8, 10]
+    for k in new_set_k
         println("k: ", k)
         # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
         # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
         # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
         # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1 , U = 6, k=k)
-        generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1 , U = 12, k=k)
+        generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1 , U = 2, k=k)
 
 
-        U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
-        o_mat = Matrix(o)
-        m = diag(U'*o_mat*U)
-        # m = [0]
+        # U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
+        # o_mat = Matrix(o)
+        # m = diag(U'*o_mat*U)
+        m = [0]
         println("Exact Expectaition Value: ", m[1])
 
         weights = [i for i in 1:N]
 
-        w_type = 0
-        p_errors = []
+        
+        plt = plot(xlabel = "Weight Cutoff", ylabel = "Expectation Value Error", title = "L = $L, N = $N, k=$k", grid = true, dpi = 200)
 
-        for i in weights
-            println("Weight Threshold: ", i)
-            e_v = run(N = N, k = k, thresh = thresh, w_type = w_type, w = i)
-            push!(p_errors, abs(real(m[1]) - real(e_v)))
-            # push!(p_errors, real(e_v))
+        for thresh in [1e-4, 1e-3]
+            w_type = 0
+
+            p_errors = []
+
+            for i in weights
+                println("Weight Threshold: ", i)
+                e_v = run(N = N, k = k, thresh = thresh, w_type = w_type, w = i)
+                push!(p_errors, abs(real(m[1]) - real(e_v)))
+                # push!(p_errors, real(e_v))
+
+            end
+            display(p_errors)
+
+            w_type = 1
+            m_errors = []
+
+            for i in weights
+                println("Weight Threshold: ", i)
+                e_v = run(N = N, k = k, thresh = thresh, w_type = w_type, w = i)
+                push!(m_errors, abs(real(m[1]) - real(e_v)))
+                # push!(m_errors, real(e_v))
+
+            end
+
+            display(m_errors)
+
+            plot!(weights, [p_errors, m_errors],
+                label = ["Pauli $thresh" "Majorana $thresh"],
+                lw = 2,
+                marker = :circle,
+                # legend = :topright,
+                grid = true)
 
         end
-        display(p_errors)
-
-        w_type = 1
-        m_errors = []
-
-        for i in weights
-            println("Weight Threshold: ", i)
-            e_v = run(N = N, k = k, thresh = thresh, w_type = w_type, w = i)
-            push!(m_errors, abs(real(m[1]) - real(e_v)))
-            # push!(m_errors, real(e_v))
-
-        end
-
-        display(m_errors)
-
-        plot(weights, [p_errors, m_errors],
-            label = ["Pauli" "Majorana"],
-            xlabel = "Weight Cutoff",
-            ylabel = "Expectation Value Error",
-            title = "L = $L, N = $N, k=$k",
-            lw = 2,
-            marker = :circle,
-            legend = :topright,
-            grid = true,
-            dpi = 150)
-
-        savefig("test/temp_hubbard_2d_weights_L$L-k$k.png")
+  
+        savefig("test/hubbard_2d_weights_L$L-k$k.png")
     end
 end
 
@@ -131,5 +135,5 @@ function temp_run()
 
 end
 
-# run_weights()
-temp_run()    
+run_weights()
+# temp_run()    

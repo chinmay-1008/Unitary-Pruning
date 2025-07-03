@@ -21,11 +21,12 @@ function run(; N=10, k=5, thresh=1e-3)
     i = 4
     α = i * π / 32 
     generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    generators, parameters = UnitaryPruning.get_unitary_sequence_1D(o, α = α, k = k)
     ei , nops, c_norm2 = UnitaryPruning.bfs_evolution(generators, parameters, PauliSum(o), ket, thresh=thresh)
     
     # push!(e, ei)
     # push!(angles, α)
-    println(length(generators))
+    # println(length(generators))
     @printf(" α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei), imag(ei), maximum(nops), c_norm2, thresh)
 
     # U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
@@ -84,7 +85,7 @@ function run_threshold()
     # thresholds = [1e-4, 2e-4, 3e-4, 4e-4, 5e-4, 6e-4, 7e-4, 8e-4, 9e-4]
     # thresholds = [9e-5, 8e-5, 6e-5, 5e-5, 4e-5, 3e-5, 2e-5, ]
     # thresholds = [5.0e-4, 5.1e-4, 5.2e-4, 5.3e-4, 5.5e-4, 5.6e-4, 5.7e-4, 5.8e-4, 5.9e-4, 6.0e-4, 6.1e-4, 6.2e-4, 6.3e-4, 6.4e-4, 6.5e-4, 6.6e-4, 6.7e-4, 6.8e-4, 6.9e-4, 7.0e-4]
-    thresholds = [i*(1e-4) for i in 1:20]
+    thresholds = [i*(0.5e-3) for i in 1:100]
     ener = []
     for th in thresholds
         # println(th)
@@ -94,18 +95,18 @@ function run_threshold()
     end
 
     println(ener)
-    # scatter(thresholds, ener, smooth=true)
-    # xlabel!("Threshold")
-    # ylabel!("Expectation Value")
-    # title!("E{Z_1} vs threshold (N=10; k=10; α=4π/32)")
-    # savefig("test/ener_vs_thre_hei.pdf")
+    scatter(thresholds, ener, smooth=true)
+    xlabel!("Threshold")
+    ylabel!("Expectation Value")
+    title!("E{Z_1} vs threshold (N=10; k=10)")
+    savefig("test/ener_vs_thre_hei_2.pdf")
     return
 end
 
-for ii in [20, 50]
-    println("N = ", ii)
-    run(N = ii, k = 10, thresh = 2e-3)
-end
+# for ii in [20, 50]
+#     println("N = ", ii)
+#     run(N = ii, k = 10, thresh = 2e-3)
+# end
 # run_local_folding()
 
-# run_threshold()
+run_threshold()
