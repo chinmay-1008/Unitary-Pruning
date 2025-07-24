@@ -15,9 +15,10 @@ function run(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     ket = KetBitString(N, 0) 
     o = Pauli(N, Z=[1])
 
-    generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1, U = 6, k=k)
     # generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1, U = 2, k=k)
 
@@ -49,7 +50,8 @@ function run_ops(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     ket = KetBitString(N, 0) 
     o = Pauli(N, Z=[1])
 
-    generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1, U = 6, k=k)
@@ -60,19 +62,6 @@ function run_ops(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     α = π/4
 
     @printf(" α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei), imag(ei), nops[end], c_norm2, thresh)
-
-    # U = UnitaryPruning.build_time_evolution_matrix_fast(generators, parameters)
-    # o_mat = Matrix(o)
-    # m = diag(U'*o_mat*U)
-    # error = real(m[1]) -  real(ei) 
-    # println(real(m[1]), " ", real(ei), " Error: ", error)
-
-
-    # ψ = zeros(ComplexF64, 2^N); ψ[1] = 1.0
-    # ψp = U * ψ
-    # e = dot(ψp, Matrix(o) * ψp)
-    # error = real(e) -  real(ei) 
-    # println(real(e), " ", real(ei), " Error: ", error)
 
     return real(ei), nops[end], length(generators)
 end
@@ -218,17 +207,21 @@ function run_num_ops()
 end
 
 function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool = true)
-    L = 15
-    N = L
+    L = 5
+    N = L*L
     o = Pauli(N, Z=[1])
     new_set_k = [1, 2, 4, 8, 10]
-    thresholds = [1e-3, 1e-4]
+    thresholds = [1e-4]
+    # thresholds = [-1]
+
     weights = 1:N
 
     for k in new_set_k
         println("k: ", k)
         # generators, parameters = UnitaryPruning.heisenberg(o, Jx=0.8, Jy=0.9, Jz=0.9, k=k)
+        # generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
 
+        # return
         # Placeholder for "exact" expectation value, set to 0
         m = [0.0]
 
@@ -270,10 +263,10 @@ function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool =
         end
 
         if run_weights_plot
-            savefig(plt1, "test/heisenberg_1d_weights_L$L-k$k-thre.png")
+            savefig(plt1, "test/heisenberg_2d_weights_L$L-k$k.png")
         end
         if run_ops_plot
-            savefig(plt2, "test/heisenberg_1d_nops_L$L-k$k-thre.png")
+            savefig(plt2, "test/heisenberg_2d_nops_L$L-k$k.png")
         end
     end
 end

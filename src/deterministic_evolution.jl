@@ -176,13 +176,6 @@ function majorana_weight(Pb::Union{Pauli{N}, FixedPhasePauli{N}}) where N
     return w
 end
 
-function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0, w_type = 0) where {N}
-    if w_type == 0 
-        filter!(p->(weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
-    else
-        filter!(p->(majorana_weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
-    end     
-end
 
 function weightclip!(ps::PauliSum{N}; lc = 0) where {N}
     filter!(p-> weight(p.first) <= lc , ps.ops)
@@ -192,6 +185,13 @@ function majorana_clip!(ps::PauliSum{N}; lc = 0) where {N}
     filter!(p-> majorana_weight(p.first) <= lc , ps.ops)
 end
 
+function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0, w_type = 0) where {N}
+    if w_type == 0 
+        filter!(p->(weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
+    else
+        filter!(p->(majorana_weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
+    end     
+end
 # w_type is the type of clipping, 0 is Pauli weight clipping and 1 is majorana weight clipping
 function bfs_evolution_weight(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, w_type = 0, w = 2) where {N}
 
