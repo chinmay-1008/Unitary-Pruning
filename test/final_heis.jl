@@ -50,8 +50,8 @@ function run_ops(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     ket = KetBitString(N, 0) 
     o = Pauli(N, Z=[1])
 
-    # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
-    generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    # generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1, U = 6, k=k)
@@ -61,7 +61,7 @@ function run_ops(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     
     α = π/4
 
-    @printf(" α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei), imag(ei), nops[end], c_norm2, thresh)
+    @printf(" α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei), imag(ei), maximum(nops), c_norm2, thresh)
 
     return real(ei), nops[end], length(generators)
 end
@@ -207,14 +207,16 @@ function run_num_ops()
 end
 
 function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool = true)
-    L = 5
-    N = L*L
+    L = 128
+    N = L
     o = Pauli(N, Z=[1])
-    new_set_k = [1, 2, 4, 8, 10]
-    thresholds = [1e-4]
+    # new_set_k = [1, 2, 4, 8, 10]
+    new_set_k = [1, 2, 3, 4, 5]
+
+    thresholds = [1e-3]
     # thresholds = [-1]
 
-    weights = 1:N
+    weights = [N+1]
 
     for k in new_set_k
         println("k: ", k)
@@ -263,10 +265,10 @@ function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool =
         end
 
         if run_weights_plot
-            savefig(plt1, "test/heisenberg_2d_weights_L$L-k$k.png")
+            savefig(plt1, "test/heisenberg_1d_weights_L$L-k$k.png")
         end
         if run_ops_plot
-            savefig(plt2, "test/heisenberg_2d_nops_L$L-k$k.png")
+            savefig(plt2, "test/heisenberg_1d_nops_L$L-k$k.png")
         end
     end
 end
@@ -295,7 +297,26 @@ function eigenspectrum()
 
 end
 
+function temp_run()
+    N=128
+    thresh=1e-3
+    ket = KetBitString(N, 0) 
+    o = Pauli(N, Z=[1])
+
+    for k in 1:5
+        println("k: ", k)
+        
+        generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+        ei , nops, c_norm2 = UnitaryPruning.bfs_evolution(generators, parameters, PauliSum(o), ket, thresh=thresh)       
+
+        @printf(" e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", real(ei), imag(ei), nops[end], c_norm2, thresh)
+    end
+
+    return 
+end
+
 # run_weights()
 # eigenspectrum()    
 # run_num_ops()
-run_weights_and_ops()
+# run_weights_and_ops()
+temp_run()
