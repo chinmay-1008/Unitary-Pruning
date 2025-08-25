@@ -347,7 +347,7 @@ function fermi_hubbard_2D(o::Pauli{N}; t, U, k) where N
             end
         end
 
-        for (pauli, coeff) in t_term.ops
+        for (pauli, coeff) in t_term
             push!(generators, Pauli(pauli))
             push!(parameters, -t*coeff)
         end 
@@ -364,7 +364,7 @@ function fermi_hubbard_2D(o::Pauli{N}; t, U, k) where N
             # display(u_term)
         end
 
-        for (pauli, coeff) in u_term.ops
+        for (pauli, coeff) in u_term
             push!(generators, Pauli(pauli))
             push!(parameters, U*coeff)
         end

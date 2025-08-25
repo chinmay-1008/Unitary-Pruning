@@ -7,6 +7,9 @@ using PauliOperators
 
 
 """
+
+@inline commute(p1::Union{Pauli{N}, PauliBasis{N}}, p2::Union{Pauli{N}, PauliBasis{N}}) where {N} = iseven(count_ones(p1.x & p2.z) - count_ones(p1.z & p2.x)) 
+
 function deterministic_pauli_rotations(generators::Vector{Pauli{N}}, angles, o::Pauli{N}, ket ; thres=1e-3) where {N}
 
     #
@@ -148,13 +151,13 @@ function bfs_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket
     return expval, n_ops, coeff_norm2
 end
 
-function weight(ps::FixedPhasePauli{N}) where {N}
+function weight(ps::Union{Pauli{N}, PauliBasis{N}}) where {N}
     x = ps.x
     z = ps.z
     return count_ones(x | z)
 end
 
-function majorana_weight(Pb::Union{Pauli{N}, FixedPhasePauli{N}}) where N
+function majorana_weight(Pb::Union{Pauli{N}, PauliBasis{N}}) where N
 
     w = 0
     control = true
@@ -178,18 +181,18 @@ end
 
 
 function weightclip!(ps::PauliSum{N}; lc = 0) where {N}
-    filter!(p-> weight(p.first) ≤ lc , ps.ops)
+    filter!(p-> weight(p.first) ≤ lc , ps)
 end
 
 function majorana_clip!(ps::PauliSum{N}; lc = 0) where {N}
-    filter!(p-> majorana_weight(p.first) ≤ lc , ps.ops)
+    filter!(p-> majorana_weight(p.first) ≤ lc , ps)
 end
 
 function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0, w_type = 0) where {N}
     if w_type == 0 
-        filter!(p->(weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
+        filter!(p->(weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps)
     else
-        filter!(p->(majorana_weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps.ops)
+        filter!(p->(majorana_weight(p.first) ≤ lc) && (abs(p.second) ≥ thresh) , ps)
     end     
 end
 # w_type is the type of clipping, 0 is Pauli weight clipping and 1 is majorana weight clipping
@@ -218,11 +221,11 @@ function bfs_evolution_weight(generators::Vector{Pauli{N}}, angles, o::PauliSum{
 
         sin_branch = PauliSum(N)
 
-        for (oi,coeff) in o_transformed.ops
+        for (oi,coeff) in o_transformed
            
             abs(coeff) > thresh || continue
 
-            if commute(oi, g.pauli) == false
+            if commute(oi, g) == false
                 
                 # cos branch
                 o_transformed[oi] = coeff * vcos[t]
@@ -251,7 +254,7 @@ function bfs_evolution_weight(generators::Vector{Pauli{N}}, angles, o::PauliSum{
 
     coeff_norm2 = 0
 
-    for (oi,coeff) in o_transformed.ops
+    for (oi,coeff) in o_transformed
         expval += coeff*expectation_value(oi, ket)
         coeff_norm2+= abs(coeff)^2      # final list of operators
     end
