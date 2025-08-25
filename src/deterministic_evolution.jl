@@ -178,11 +178,11 @@ end
 
 
 function weightclip!(ps::PauliSum{N}; lc = 0) where {N}
-    filter!(p-> weight(p.first) <= lc , ps.ops)
+    filter!(p-> weight(p.first) ≤ lc , ps.ops)
 end
 
 function majorana_clip!(ps::PauliSum{N}; lc = 0) where {N}
-    filter!(p-> majorana_weight(p.first) <= lc , ps.ops)
+    filter!(p-> majorana_weight(p.first) ≤ lc , ps.ops)
 end
 
 function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0, w_type = 0) where {N}
@@ -235,16 +235,16 @@ function bfs_evolution_weight(generators::Vector{Pauli{N}}, angles, o::PauliSum{
         end
         sum!(o_transformed, sin_branch) 
         # clip!(o_transformed, thresh=thresh)
-        myclip!(o_transformed, thresh=thresh, lc = w, w_type = w_type)
-        # if w_type == 0
+        # myclip!(o_transformed, thresh=thresh, lc = w, w_type = w_type)
+        if w_type == 0
 
-        #     weightclip!(o_transformed, lc = w)
+            weightclip!(o_transformed, lc = w)
 
-        # elseif w_type == 1 
+        elseif w_type == 1 
 
-        #     majorana_clip!(o_transformed, lc = w)
+            majorana_clip!(o_transformed, lc = w)
 
-        # end
+        end 
 
         n_ops[t] = length(o_transformed)
     end

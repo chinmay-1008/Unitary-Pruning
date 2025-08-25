@@ -15,12 +15,12 @@ function run(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     ket = KetBitString(N, 0) 
     o = Pauli(N, Z=[1])
 
-    # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    # generators, parameters = UnitaryPruning.hzeisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
-    generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    # generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1, U = 6, k=k)
-    # generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1, U = 2, k=k)
+    generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1, U = 2, k=k)
 
     ei , nops, c_norm2 = UnitaryPruning.bfs_evolution_weight(generators, parameters, PauliSum(o), ket, thresh=thresh, w_type = w_type, w = w)
     
@@ -50,18 +50,18 @@ function run_ops(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     ket = KetBitString(N, 0) 
     o = Pauli(N, Z=[1])
 
-    generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1, U = 6, k=k)
-    # generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1, U = 2, k=k)
+    generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1, U = 10, k=k)
 
     ei , nops, c_norm2 = UnitaryPruning.bfs_evolution_weight(generators, parameters, PauliSum(o), ket, thresh=thresh, w_type = w_type, w = w)
     
     α = π/4
 
-    @printf(" α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei), imag(ei), maximum(nops), c_norm2, thresh)
+    @printf(" α: %6.4f e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", α, real(ei), imag(ei), nops[end], c_norm2, thresh)
 
     return real(ei), nops[end], length(generators)
 end
@@ -141,7 +141,7 @@ function run_num_ops()
     L = 10
       
     N = L 
-    o = Pauli(N, Z=[1])
+    # o = Pauli(N, Z=[1])
     set_k = [1, 2, 3, 4, 5, 10]
     new_set_k = [1, 2, 4, 8, 10]
     # thresholds = [1e-4, 1e-3]
@@ -207,34 +207,38 @@ function run_num_ops()
 end
 
 function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool = true)
-    L = 128
-    N = L
+    L = 2
+    N = 2 * L * L
     o = Pauli(N, Z=[1])
-    # new_set_k = [1, 2, 4, 8, 10]
-    new_set_k = [1, 2, 3, 4, 5]
+    new_set_k = [1, 2, 5, 10]
+    # new_set_k = [1, 2, 3, 4, 5]
 
-    thresholds = [1e-3]
-    # thresholds = [-1]
+    # thresholds = [1e-4, 1e-3]
+    thresholds = [-1]
 
-    weights = [N+1]
+    weights = [i for i in 1:2*N]
 
     for k in new_set_k
         println("k: ", k)
         # generators, parameters = UnitaryPruning.heisenberg(o, Jx=0.8, Jy=0.9, Jz=0.9, k=k)
         # generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+        generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1, U = 10, k=k)
 
         # return
         # Placeholder for "exact" expectation value, set to 0
-        m = [0.0]
+        U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
+        o_mat = Matrix(o)
+        m = diag(U'*o_mat*U)
+        # m = [0.0]
 
         if run_weights_plot
-            plt1 = plot(xlabel = "Weight Cutoff", ylabel = "Expectation Value Error",
-                        title = "L = $L, N = $N, k=$k", grid = true, dpi = 200, legend = :bottomright)
+            plt1 = plot(xlabel = "Weight Cutoff", ylabel = "Abs Error of Expectation Value",
+                        title = "L = $L, N = $N, k=$k", grid = true, dpi = 300)#, legend = :bottomright)
         end
 
         if run_ops_plot
-            plt2 = plot(xlabel = "Weight Cutoff", ylabel = "PP ops ",
-                        title = "L = $L, N = $N, k=$k", grid = true, dpi = 200)
+            plt2 = plot(xlabel = "Weight Cutoff", ylabel = "PP ops",
+                        title = "L = $L, N = $N, k=$k", grid = true, dpi = 300)
         end
 
         for thresh in thresholds
@@ -246,9 +250,9 @@ function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool =
                     println("Weight Threshold: ", w)
                     # ev = run(N=N, k=k, thresh=thresh, w_type=w_type, w=w)
 
-                    ev, nops, _ = run_ops(N=N, k=k, thresh=thresh, w_type=w_type, w=w)
+                    ev, nops, len_generators = run_ops(N=N, k=k, thresh=thresh, w_type=w_type, w=w)
                     push!(op_counts, nops)
-                    push!(p_errors, abs(real(m[1]) - real(ev)))
+                    push!(p_errors, abs((m[1]) - (ev)))
 
                 end
 
@@ -265,10 +269,10 @@ function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool =
         end
 
         if run_weights_plot
-            savefig(plt1, "test/heisenberg_1d_weights_L$L-k$k.png")
+            savefig(plt1, "test/hubbard_2d_weights_L$L-k$k.png")
         end
         if run_ops_plot
-            savefig(plt2, "test/heisenberg_1d_nops_L$L-k$k.png")
+            savefig(plt2, "test/hubbard_2d_nops_L$L-k$k.png")
         end
     end
 end
@@ -297,26 +301,35 @@ function eigenspectrum()
 
 end
 
+
 function temp_run()
-    N=128
-    thresh=1e-3
+    N=5
+    thresholds=[-1, 1e-6, 1e-5, 1e-4, 1e-3]
     ket = KetBitString(N, 0) 
     o = Pauli(N, Z=[1])
 
-    for k in 1:5
-        println("k: ", k)
-        
-        generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
-        ei , nops, c_norm2 = UnitaryPruning.bfs_evolution(generators, parameters, PauliSum(o), ket, thresh=thresh)       
+    k_list = [i for i in 1:20]
+    plt = plot(xlabel = "k", ylabel = "# operators", dpi = 200,  title="Operator Growth vs k for N=$N")
 
-        @printf(" e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", real(ei), imag(ei), nops[end], c_norm2, thresh)
+    for thresh in thresholds
+        nops_list = []
+        println("Threshold: ", thresh)
+        for k in k_list
+            println("k: ", k)
+            
+            generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+            ei , nops, c_norm2 = UnitaryPruning.bfs_evolution(generators, parameters, PauliSum(o), ket, thresh=thresh)       
+            push!(nops_list, nops[end])
+            # @printf(" e: %12.8f+%12.8fi nops: %6i norm2: %3.8f threshold: %3.10f\n", real(ei), imag(ei), nops[end], c_norm2, thresh)
+        end
+        plot!(plt, k_list, nops_list, label = "$thresh", lw=2, marker=:circle)
+        display(nops_list)
     end
-
+    savefig("test/nops_N$N.png")
     return 
 end
-
 # run_weights()
 # eigenspectrum()    
 # run_num_ops()
-# run_weights_and_ops()
-temp_run()
+run_weights_and_ops()
+# temp_run()
