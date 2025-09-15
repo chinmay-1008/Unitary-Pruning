@@ -161,7 +161,7 @@ function run()
     t_steps = 100000
     dt = 1e-5
 
-    D = diagonal_paulisum(N)
+    # D = diagonal_paulisum(N)
     # display(D)
     # return D
     errs = []
@@ -169,12 +169,12 @@ function run()
 
     for i in 1:t_steps
 
-        # D = PauliSum(N)
-        # for (p, c) in H
-        #     if p.x == 0
-        #         sum!(D, c*p)
-        #     end
-        # end
+        D = PauliSum(N)
+        for (p, c) in H
+            if p.x == 0
+                sum!(D, c*p)
+            end
+        end
         com = D * H - H * D
 
         # newclip!(com, thresh = 1e-10)
@@ -236,12 +236,12 @@ function run_matrix()
     # return
     errs = []
     times = Float64[]
-    D = diagonal_paulisum(N)
-    D = Matrix(D)
+    # D = diagonal_paulisum(N)
+    # D = Matrix(D)
 
     for i in 1:t_steps
         # Step 1: Extract diagonal part of H
-        # D = Diagonal(diag(H))
+        D = Diagonal(diag(H))
     
         # Step 2: Build generator G = [D, H]
         G = D*H - H*D   # commutator
