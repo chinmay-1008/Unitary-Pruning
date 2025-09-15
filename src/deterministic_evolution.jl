@@ -90,7 +90,13 @@ end
 
 
 """
-function bfs_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3) where {N}
+
+
+function newclip!(ps::PauliSum{N}; thresh=1e-16) where {N}
+    filter!(p->(abs(p.second) ≥ thresh) , ps)
+end
+
+function bfs_evolution(generators::Union{Vector{Pauli{N}}, Vector{PauliBasis{N}}}, angles, o::PauliSum{N}, ket ; thresh=1e-3) where {N}
 
     #
     # for a single pauli Unitary, U = exp(-i θn Pn/2)
@@ -116,12 +122,11 @@ function bfs_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket
         sin_branch = PauliSum(N)
         temp_norm2 = 0
 
-        for (oi,coeff) in o_transformed.ops
+        for (oi,coeff) in o_transformed
            
             abs(coeff) > thresh || continue
 
-
-            if commute(oi, g.pauli) == false
+            if commute(oi, PauliBasis(g)) == false
                 
                 # cos branch
                 o_transformed[oi] = coeff * vcos[t]
@@ -134,13 +139,13 @@ function bfs_evolution(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket
             temp_norm2+=abs(coeff)^2
         end
         sum!(o_transformed, sin_branch) 
-        clip!(o_transformed, thresh=thresh)
+        newclip!(o_transformed, thresh=thresh)
         n_ops[t] = length(o_transformed)
     end
 
     coeff_norm2 = 0
 
-    for (oi,coeff) in o_transformed.ops
+    for (oi,coeff) in o_transformed
         expval += coeff*expectation_value(oi, ket)
         coeff_norm2+= abs(coeff)^2      # final list of operators
     end
@@ -196,7 +201,7 @@ function myclip!(ps::PauliSum{N}; thresh=1e-16, lc = 0, w_type = 0) where {N}
     end     
 end
 # w_type is the type of clipping, 0 is Pauli weight clipping and 1 is majorana weight clipping
-function bfs_evolution_weight(generators::Vector{Pauli{N}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, w_type = 0, w = 2) where {N}
+function bfs_evolution_weight(generators::Union{Vector{Pauli{N}}, Vector{PauliBasis{N}}}, angles, o::PauliSum{N}, ket ; thresh=1e-3, w_type = 0, w = 2) where {N}
 
     #
     # for a single pauli Unitary, U = exp(-i θn Pn/2)
