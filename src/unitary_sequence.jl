@@ -109,7 +109,7 @@ end
 
 
 
-function build_time_evolution_matrix(generators::Vector{Pauli{N}}, angles::Vector) where N
+function build_time_evolution_matrix(generators::Union{Vector{Pauli{N}}, Vector{PauliBasis{N}}}, angles::Vector) where N
     U = Matrix(Pauli(N))
     nt = length(generators)
     length(angles) == nt || throw(DimensionMismatch)
@@ -235,17 +235,79 @@ function jw_transform(o::Pauli{N}, site) where N
     return 0.5*p
 end
 
-function fermi_hubbard_1D(o::Pauli{N}; t, U, k) where N
-    Nsites = Int(N/2)
-    generators = Vector{Pauli{N}}()
-    parameters = Vector{Float64}()
 
-    t_term = PauliSum(N)
+function fermi_hubbard_1D_new(o::Pauli{N}; t, U, k) where N
+    Nsites = Int(N/2)
+    generators = Vector{PauliBasis{N}}()
+    parameters = Vector{Float64}()
 
     up(j) = 2*j - 1  
     dn(j) = 2*j      
 
     for ki in 1:k
+        for j in 1:Nsites - 1
+
+            # α-spin c{i, α}†c{j, α} + h.c.
+            i_a = jw_transform(o, up(j))
+            j_a = jw_transform(o, up(j+1))
+            
+            temp =  i_a' * j_a
+            temp += j_a' * i_a
+            temp = -t * temp
+
+            for (p, c) in temp
+                if abs(c) > 1e-10   
+                    push!(generators, p)
+                    push!(parameters, c)
+                end
+            end
+
+            # β-spin c{i, β}†c{j, β} + h.c. 
+            i_b = jw_transform(o, dn(j))
+            j_b = jw_transform(o, dn(j+1))
+            temp = i_b' * j_b
+            temp += j_b' * i_b 
+            temp = -t * temp
+
+            for (p, c) in temp
+                if abs(c) > 1e-10   
+                    push!(generators, p)
+                    push!(parameters, c)
+                end
+            end
+        end
+
+        for j in 1:Nsites
+            # interacting term
+            i_a = jw_transform(o, up(j))
+            i_b = jw_transform(o, dn(j))
+
+            temp =  i_a'*i_a*i_b'*i_b
+            temp = U * temp
+            for (p, c) in temp
+                if abs(c) > 1e-10   
+                    push!(generators, p)
+                    push!(parameters, c)
+                end
+            end
+        end
+    end
+
+    return generators, parameters
+end 
+
+function fermi_hubbard_1D(o::Pauli{N}; t, U, k) where N
+    Nsites = Int(N/2)
+    generators = Vector{Pauli{N}}()
+    parameters = Vector{Float64}()
+
+    up(j) = 2*j - 1  
+    dn(j) = 2*j      
+    t_term = PauliSum(N)
+    u_term = PauliSum(N)
+    for ki in 1:k
+        t_term = PauliSum(N)
+
         for j in 1:Nsites - 1
             # println("site: ", j)
 
@@ -265,7 +327,7 @@ function fermi_hubbard_1D(o::Pauli{N}; t, U, k) where N
             # display(temp)
         end
 
-        for (pauli, coeff) in t_term.ops
+        for (pauli, coeff) in t_term
             push!(generators, Pauli(pauli))
             push!(parameters, -t*coeff)
         end
@@ -282,13 +344,13 @@ function fermi_hubbard_1D(o::Pauli{N}; t, U, k) where N
             # display(u_term)
         end
 
-        for (pauli, coeff) in u_term.ops
+        for (pauli, coeff) in u_term
             push!(generators, Pauli(pauli))
             push!(parameters, U*coeff)
         end
     end
 
-    return generators, parameters
+    return generators, parameters#, -t*t_term + U*u_term
 end 
 
 
@@ -347,7 +409,7 @@ function fermi_hubbard_2D(o::Pauli{N}; t, U, k) where N
             end
         end
 
-        for (pauli, coeff) in t_term.ops
+        for (pauli, coeff) in t_term
             push!(generators, Pauli(pauli))
             push!(parameters, -t*coeff)
         end 
@@ -364,7 +426,7 @@ function fermi_hubbard_2D(o::Pauli{N}; t, U, k) where N
             # display(u_term)
         end
 
-        for (pauli, coeff) in u_term.ops
+        for (pauli, coeff) in u_term
             push!(generators, Pauli(pauli))
             push!(parameters, U*coeff)
         end
@@ -372,6 +434,106 @@ function fermi_hubbard_2D(o::Pauli{N}; t, U, k) where N
     return generators, parameters, -t*t_term + U*u_term
 
 end
+
+
+function fermi_hubbard_2D_new(o::Pauli{N}; t, U, k) where N
+    Nsites = Int(N/2)
+    L = Int(sqrt(Nsites))
+    generators = Vector{PauliBasis{N}}()
+    parameters = Vector{Float64}()
+
+    up(j) = 2*j - 1  
+    dn(j) = 2*j
+    linear_index(x, y) = (x-1)*L + y
+    
+    for ki in 1:k
+
+        for x in 1:L
+            for y in 1:L
+                j = linear_index(x, y)
+                if x < L
+                    # down coupling
+                    i = linear_index(x + 1, y)
+
+                    # α-spin c{i, α}†c{j, α} + h.c.
+                    i_a = jw_transform(o, up(j))
+                    j_a = jw_transform(o, up(i))
+
+                    temp = i_a' * j_a
+                    temp += j_a' * i_a
+                    for (p, c) in temp
+                        if abs(c) > 1e-10   # or whatever tolerance you prefer
+                            push!(generators, p)
+                            push!(parameters, -t*c)
+                        end
+                    end
+
+                    # β-spin c{i, β}†c{j, β} + h.c. 
+                    i_b = jw_transform(o, dn(j))
+                    j_b = jw_transform(o, dn(i))
+                    temp = i_b' * j_b
+                    temp += j_b' * i_b 
+                    
+                    for (p, c) in temp
+                        if abs(c) > 1e-10   # or whatever tolerance you prefer
+                            push!(generators, p)
+                            push!(parameters, -t*c)
+                        end
+                    end
+                end  
+
+                if y < L 
+                    # α-spin c{i, α}†c{j, α} + h.c.
+                    i = linear_index(x, y + 1)
+                    # right side coupling
+                    i_a = jw_transform(o, up(j))
+                    j_a = jw_transform(o, up(i))
+
+                    temp = i_a' * j_a
+                    temp += j_a' * i_a
+
+                    for (p, c) in temp
+                        if abs(c) > 1e-10   # or whatever tolerance you prefer
+                            push!(generators, p)
+                            push!(parameters, -t*c)
+                        end
+                    end
+                    # β-spin c{i, β}†c{j, β} + h.c. 
+                    i_b = jw_transform(o, dn(j))
+                    j_b = jw_transform(o, dn(i))
+                    temp = i_b' * j_b
+                    temp += j_b' * i_b 
+
+                    for (p, c) in temp
+                        if abs(c) > 1e-10   # or whatever tolerance you prefer
+                            push!(generators, p)
+                            push!(parameters, -t*c)
+                        end
+                    end
+                end
+            end
+        end
+
+
+        for j in 1:Nsites
+            # interacting term
+            i_a = jw_transform(o, up(j))
+            i_b = jw_transform(o, dn(j))
+
+            temp = i_a'*i_a*i_b'*i_b
+
+            for (p, c) in temp
+                if abs(c) > 1e-10   # or whatever tolerance you prefer
+                    push!(generators, p)
+                    push!(parameters, U*c)
+                end
+            end
+        end
+    end
+    return generators, parameters
+
+end
+
 
 function tilted_ising(N, Jx, Jz)
     H = PauliSum(N)
