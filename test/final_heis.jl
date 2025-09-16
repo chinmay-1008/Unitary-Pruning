@@ -15,12 +15,13 @@ function run(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
     ket = Ket(N, 0) 
     o = Pauli(N, Z=[1])
 
+
     # generators, parameters = UnitaryPruning.hzeisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1, U = 6, k=k)
-    generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D(o, t = 1, U = 2, k=k)
+    generators, parameters, hammy = UnitaryPruning.fermi_hubbard_2D_new(o, t = 1, U = 2, k=k)
 
     ei , nops, c_norm2 = UnitaryPruning.bfs_evolution_weight(generators, parameters, PauliSum(o), ket, thresh=thresh, w_type = w_type, w = w)
     
@@ -47,17 +48,26 @@ end
 
 function run_ops(; N=10, k=5, thresh=1e-3, w_type = 0, w = 2)
    
-    ket = Ket(N, 0) 
+    ket = Ket(N, 7)
     o = Pauli(N, Z=[1])
+
+    # Number operator
+    up(j) = 2*j - 1  
+    dn(j) = 2*j      
+    j = 1
+    i_a = UnitaryPruning.jw_transform(o, up(j))
+    i_b = UnitaryPruning.jw_transform(o, dn(j))
+
+    o_n =  i_a'*i_a*i_b'*i_b
 
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
     # generators, parameters = UnitaryPruning.heisenberg(o, Jx =1.0, Jy = 1.0,Jz = 1.0, k=k)
     # generators, parameters = UnitaryPruning.heisenberg_2D(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
-    # generators, parameters = UnitaryPruning.fermi_hubbard_1D(o, t = 1, U = 6, k=k)
-    generators, parameters = UnitaryPruning.fermi_hubbard_2D_new(o, t = 1, U = 2, k=k)
+    generators, parameters = UnitaryPruning.fermi_hubbard_1D_new(o, t = 1, U = 2, k=k)
+    # generators, parameters = UnitaryPruning.fermi_hubbard_2D_new(o, t = 1, U = 10, k=k)
 
-    ei , nops, c_norm2 = UnitaryPruning.bfs_evolution_weight(generators, parameters, PauliSum(o), ket, thresh=thresh, w_type = w_type, w = w)
+    ei , nops, c_norm2 = UnitaryPruning.bfs_evolution_weight(generators, parameters, o_n, ket, thresh=thresh, w_type = w_type, w = w)
     
     α = π/4
 
@@ -68,13 +78,27 @@ end
 
 function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool = true)
     L = 2
-    N = 2 * L * L
+    N = 2 * L 
     o = Pauli(N, Z=[1])
-    new_set_k = [1, 2, 5, 10]
+    # new_set_k = [1, 2, 5, 10]
+    new_set_k = [10]
+
+    # Number operator
+    up(j) = 2*j - 1  
+    dn(j) = 2*j      
+    j = 1
+    i_a = UnitaryPruning.jw_transform(o, up(j))
+    i_b = UnitaryPruning.jw_transform(o, dn(j))
+
+    o_n =  i_a' * i_a + i_b' * i_b
+    
+    o_mat = Matrix(o_n)
+
+    
     # new_set_k = [1, 2, 3, 4, 5]
 
-    # thresholds = [1e-4, 1e-3]
-    thresholds = [-1, 1e-10, 1e-4, 1e-3]
+    thresholds = [-1]
+    # thresholds = [1e-10, 1e-4, 1e-3]
 
     weights = [i for i in 1:2*N]
 
@@ -82,16 +106,21 @@ function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool =
         println("k: ", k)
         # generators, parameters = UnitaryPruning.heisenberg(o, Jx=0.8, Jy=0.9, Jz=0.9, k=k)
         # generators, parameters = UnitaryPruning.heisenberg_2D_open(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
-        generators, parameters = UnitaryPruning.fermi_hubbard_2D_new(o, t = 1, U = 2, k=k)
+        generators, parameters = UnitaryPruning.fermi_hubbard_1D_new(o, t = 0.0, U = 1.0, k=k)
 
         # return
         # Placeholder for "exact" expectation value, set to 0
-        # U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
-        # o_mat = Matrix(o)
-        # m = diag(U'*o_mat*U)
-        # display(m[1])
-        m = [0.0]
+        println("GENERATORS")
 
+        U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
+        m = diag(U'*o_mat*U)
+        # display(m)
+        for i in 0:2^N-1
+            display(Ket(N, i))
+            display(m[i+1])
+        end
+        # m = [0.0]
+        return
         if run_weights_plot
             plt1 = plot(xlabel = "Weight Cutoff", ylabel = "Expectation Value",
                         title = "L = $L, N = $N, k=$k", grid = true, dpi = 300)#, legend = :bottomright)
@@ -113,7 +142,9 @@ function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool =
 
                     ev, nops, len_generators = run_ops(N=N, k=k, thresh=thresh, w_type=w_type, w=w)
                     push!(op_counts, nops)
-                    push!(p_errors, abs((m[1]) - (ev)))
+                    # push!(p_errors, abs((m[1]) - (ev)))
+                    push!(p_errors, real(ev))
+
 
                 end
 
@@ -130,10 +161,10 @@ function run_weights_and_ops(run_weights_plot::Bool = true, run_ops_plot::Bool =
         end
 
         if run_weights_plot
-            savefig(plt1, "test/hubbard_2d_weights_L$L-k$k.png")
+            savefig(plt1, "test/hubbard_2d_occ_1_L$L-k$k.png")
         end
         if run_ops_plot
-            savefig(plt2, "test/hubbard_2d_nops_L$L-k$k.png")
+            savefig(plt2, "test/hubbard_2d_occ_1_nops_L$L-k$k.png")
         end
     end
 end

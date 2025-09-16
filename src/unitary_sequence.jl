@@ -253,6 +253,7 @@ function fermi_hubbard_1D_new(o::Pauli{N}; t, U, k) where N
             
             temp =  i_a' * j_a
             temp += j_a' * i_a
+            temp = -t * temp
 
             for (p, c) in temp
                 if abs(c) > 1e-10   
@@ -266,6 +267,7 @@ function fermi_hubbard_1D_new(o::Pauli{N}; t, U, k) where N
             j_b = jw_transform(o, dn(j+1))
             temp = i_b' * j_b
             temp += j_b' * i_b 
+            temp = -t * temp
 
             for (p, c) in temp
                 if abs(c) > 1e-10   
@@ -281,7 +283,7 @@ function fermi_hubbard_1D_new(o::Pauli{N}; t, U, k) where N
             i_b = jw_transform(o, dn(j))
 
             temp =  i_a'*i_a*i_b'*i_b
-
+            temp = U * temp
             for (p, c) in temp
                 if abs(c) > 1e-10   
                     push!(generators, p)

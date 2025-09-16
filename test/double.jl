@@ -75,31 +75,74 @@ function evolve_full(P::Union{PauliSum{N, T}, Pauli{N}}, G::PauliSum{N, T}, dt) 
             # display("real coefficient found: $c")
             push!(generators, g)
             push!(params, dt*imag(c))
-
         end
+
+        # push!(generators, g)
+        # push!(params, c)
     end
-    # display(params)
     nt = length(generators)
 
     for (p, coeff) in P
         o_transformed = coeff*PauliSum(p) 
-        sin_branch = PauliSum(N)
+        # sin_branch = PauliSum(N)
         for t in 1:nt
+            sin_branch = PauliSum(N)
             for (o, o_coeff) in o_transformed
                 g = generators[t]
                 if PauliOperators.commute(o, g) == false
                     o_transformed[o] = o_coeff * cos(2 * params[t])
                     sum!(sin_branch, 1im * o_coeff * g * o * sin(2 * params[t]) )
+                    # o_transformed[o] = o_coeff * cos(params[t])
+                    # sum!(sin_branch, 1im * o_coeff * g * o * sin(params[t]) )
                 end
             end
             sum!(o_transformed, sin_branch)
-            # newclip!(o_transformed, thresh=1e-10)
+            # newclip!(o_transformed, thresh=1e-11)
         end
         sum!(out, o_transformed)
     end
     return out
 end 
 
+
+function evolve_full_new(P::PauliSum{N, T}, G::PauliSum{N, T}, dt) where {N, T}
+    # We want to do  ∑_j [∏e^(iθG)] c_jP_j [∏e^(-iθG)]
+        out =  PauliSum(N)
+        generators = []
+        params = []
+    
+        for (g, c) in G
+            # put a sanity check
+            if isapprox(real(c), 0; atol=1e-13)
+                # display("real coefficient found: $c")
+                push!(generators, g)
+                push!(params, dt*imag(c))
+            else
+                display(c)
+                throw(ErrorException("Not antihermitian!"))
+            end
+        end
+        # display(params)
+        nt = length(generators)
+        
+        o_transformed = deepcopy(P) 
+    
+        for t in 1:nt
+            g = generators[t]
+            sin_branch = PauliSum(N)
+            for (o, o_coeff) in o_transformed
+                if PauliOperators.commute(o, g) == false
+                    o_transformed[o] = o_coeff * cos(2 * params[t])
+                    sum!(sin_branch, 1im * o_coeff * g * o * sin(2 * params[t]) )
+                end
+            end
+            sum!(o_transformed, sin_branch)
+        end
+        return o_transformed
+        # sum!(out, o_transformed)
+        # return out
+    end 
+    
 
 function largest_term(ps::PauliSum)
     best = nothing
@@ -148,6 +191,37 @@ end
 # In small limit of dt we can write this equation as a similarity transformation or heisenberg evolution
 # ```
 
+function test_evolve()
+    N = 2
+    H = heisenberg_1d(N, 0.8, 0.9, 0.9)
+    o = PauliSum(Pauli(N, Z = [1]))
+    dt = 1
+
+    k = 10
+    for i in 1:k
+        o = evolve_full(o, H, dt)
+    end
+    display(o)
+    println("NEW")
+    display(expectation_value(o, Ket(N, 0)))
+
+          
+    ket = Ket(N, 0) 
+    o = Pauli(N, Z=[1])
+    println("BFS")
+    generators, parameters = UnitaryPruning.heisenberg(o, Jx = 0.8, Jy = 0.9,Jz = 0.9, k=k)
+    ei , nops, c_norm2 = UnitaryPruning.bfs_evolution(generators, parameters, PauliSum(o), ket, thresh=1e-10)       
+    display(ei)
+
+    println("EXACT")
+    U = UnitaryPruning.build_time_evolution_matrix(generators, parameters)
+    o_mat = Matrix(o)
+    m = diag(U'*o_mat*U)
+    display(m[1])
+end
+
+
+
 
 
 function run()
@@ -158,8 +232,8 @@ function run()
     H += H'
 
     eigval, _ = eigen(Matrix(H))
-    t_steps = 100000
-    dt = 1e-5
+    t_steps = 10000
+    dt = 1e-4
 
     # D = diagonal_paulisum(N)
     # display(D)
@@ -177,17 +251,17 @@ function run()
         end
         com = D * H - H * D
 
-        # newclip!(com, thresh = 1e-10)
+        # newclip!(com, thresh = 1e-6)
 
         # u = unitary_matrix(com, dt)
         # display(norm(u' * u - I))
 
-        com = largest_term(com)
+        # com = largest_term(com)
 
         H = evolve_full(H, com, dt)
 
         # newclip!(com, thresh = 1e-10)
-        if i % 1000 == 0
+        if i % 100 == 0
             # display(H)
             mat = Matrix(H)
             err = eigval - sort(diag(mat), by= real)
@@ -221,7 +295,7 @@ end
 
 function run_matrix()
 
-    N = 2
+    N = 3
     H = rand(PauliSum{N}, n_paulis = 50)
     # H = heisenberg_1d(N, 1, 1, 5)
     # H = ising_1D(N, 1, 2)
@@ -278,7 +352,7 @@ function run_matrix()
 end
 
 function run_discrete()
-    N = 2
+    N = 3
     H = rand(PauliSum{N}, n_paulis = 50)
     # H = heisenberg_1d(N, 1, 1, 5)
     # H = ising_1D(N, 1, 2)
@@ -288,7 +362,7 @@ function run_discrete()
 
     eigval, _ = eigen(Matrix(H))
     t_steps = 100000
-    dt = 1e-5
+    dt = 1e-6
     # display(eigval)
     # return
     errs = []
@@ -341,9 +415,9 @@ end
 
 function compare_flows()
 
-    N = 2
-    t_steps = 100000
-    dt = 1e-5
+    N = 3
+    t_steps = 10000
+    dt = 1e-3
 
     # Initial Hermitian Hamiltonian
     H0 = rand(PauliSum{N}, n_paulis = 50)
@@ -375,7 +449,7 @@ function compare_flows()
         end
         com = Dp * H_pauli - H_pauli * Dp
         # com = largest_term(com)        # pruning to single Pauli generator
-        H_pauli = evolve_full(H_pauli, com, dt)
+        H_pauli = evolve_full_new(H_pauli, com, dt)
 
         # ----- Method 2 -----
         Dm = Diagonal(diag(H_matrix))
@@ -388,7 +462,7 @@ function compare_flows()
         dcom = H_disc * com_d - com_d * H_disc
         H_disc = H_disc - dt * dcom
 
-        if i % 1000 == 0
+        if i % 100 == 0
             push!(times, i * dt)
 
             mat1 = Matrix(H_pauli)
@@ -409,7 +483,8 @@ function compare_flows()
     end
 
     # Plot all on one figure
-    plot(times, errs_pauli, lw=2, label="Pauli propagation", dpi = 300)
+    plot(times, errs_pauli, lw=2, label="Pauli propagation", dpi = 300, yscale=:log10,
+    )
     plot!(times, errs_matrix, lw=2, label="Matrix formalism")
     plot!(times, errs_discrete, lw=2, label="Discrete double commutator")
     xlabel!("time")
@@ -440,8 +515,7 @@ function compare_flows()
         diagvals  = sort(real(diag(Hf)))
     
         for i in eachindex(init_spec)
-            @printf("%20.12f | %20.12f | %20.12f\n",
-                    init_spec[i], final_spec[i], diagvals[i])
+            @printf("%20.12f | %20.12f | %20.12f\n", init_spec[i], final_spec[i], diagvals[i])
         end
     end
     
@@ -453,3 +527,4 @@ compare_flows()
 # @time run()
 # @time run_matrix()
 # @time run_discrete()
+# test_evolve()
